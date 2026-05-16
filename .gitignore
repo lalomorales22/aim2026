@@ -1,0 +1,11 @@
+node_modules/
+npm-debug.log*
+.env
+.env.*
+.DS_Store
+
+# Bluehost runtime artifacts you don't want in source control
+error_log
+chatrooms.db
+*.db-journal
+.htaccess.no_htaccess.phpupgrader

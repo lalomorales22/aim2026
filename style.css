@@ -1,0 +1,1925 @@
+/* Windows 95 Theme CSS */
+@font-face {
+    font-family: 'MS Sans Serif';
+    src: url('data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAA+sAA4AAAAAKUgAAA9WAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP0ZGVE0cGh4GYACCWggEEQgKn3CTUAuBRAABNgIkA4QWBCAFhQgHgzMbTCczo8LGAQBEvpfsv07AjSHQXta/tLS0ZtQTUjYrs0FGUqmjo6bv8A8ZHZvJZDKdyYys9pUPmXzifoA2OQBgA/z+/7/t9x7wBEaIqIqYJl0P0zTtOOlEk4TZiTYIFZGJSif694TfY7XN1wUjKDEoGQUzQu5p9O/uv5OBN4wCKDRCqMX/v5vT3oO+IDFJERk9UZKGRBOlXIiZzGl6VU6ZFEaFEaVXv67L7nbC2oVnDc+anh2aXZrSEFxOQXRwNQf3JeN9Px9Q9esDzDLLb2G0G/MnQ6VAMZw7d6oO1E2P0k3Xqd4j0YrEGIlIJCoUCTIyEjUPCmW76Y/3LmDf7P5fPwLbVRnA1HkgmM5t0P4f2/nZ2T2V1SqKSAVWhUL93etTXQvnG9h3nN9VXSiA3v+LV6smNQdXe0qXKb3TdlY3C5I2mKVLK8x4pzS2ASzYGg2c97SBbQBXycoAcGiZ8vWcAg8AzQp+iuXj9qnYkJiNjH1VkjuHprgjm9vHt6K9fvN+/d/94vz6fPj8+dyLztf9r6r/VfXkXqe+5z65p6KTn3xyVt1RcUfdRw/fPnr49rVnj5+++vj2qxev//jmj9cvX//xxo9vvn716vWft7+/9/2d73fv3r1/8+a9O3fuP3jw6MnrR683HrzefPR6z/Ss3evWdM9e71rTMTMzc/bixYszMzNnZzcuXtw4Oztz8eLG7OzGxYsbl2avKv0sWWTsVl+JDllcFbZcEr1Nj+gAAKjpTVVmPDiAITAMpiGYMROYxlF1UMjLcAAE+QJCyAAJgAIQdnSw4RCAbLaAU9DJaWjnNLRyGs2chkJOQQOnIJ9T4HAKLLRADCIQgeSCQnZBAQDVl1ZwRgZnIIOrzZbBaUjnNJo4DSmchihOmxE09F9wgkIAFIyAAYCBARgYgIEBGCiiTgioA4J6IGgAggYgQAAECIAAARAggACkKiKKIqA+COoBoS4I6oIARyDAEQhwBILSAL3AXAIAqaqqK1xtLTwVXJirSvdIh4t1AE5p0FXomR3uiYhUVd/MiIjw2IBxFFWrM03Z3SqqM8Z0VyiEgR2MBvd2VUV117uqLq6FdFVVVVWpqqouiqqrVbXoIcRRXdftjsHFWzWKuqpmTVXf2Kg2NmpsKVuTWMfGRk1VVlXpaVBdVVXVXRFV1fWpUV1tjqqabatuWNu1saXjplB1VXVdVrXMZTXbvdUV1aaqzqrq6uqKRkVVd6squ7a7w93VVVUVo7Fd7jYbpGpXc+dqqMvq7t11BjVDDYPYulN2TWZdqCqTUtqiqSjVVVGVW5uqLmrVRh1dVN3l7qquqojq7q72qqrr7m7VVHpnNlxpqmqU0VRV1byh6urVddW0q7uauVVVVVO9q6qH1t1dVVnVdRVVlVVdtG2dWW1dURXV1RXVQtUUAiX2b/X39ffV1RXqdHXlKIJc1MNdUdlVXbXMquaqMF3hxjf67Hp0VVUVvNr1EM9ZCHGbqq4aVpK7q5xBDVY3q+qZdWTXYKgqdpnVyarrrjGqbVt0tyhQFhEbVdVWg8puRqjw7VXRVVHVaKqh3DVZUVVsVBfDXVNnFZXV2+VmQd3dUNXhN22UU13pNVlV3Z0VKdnVKGfX7DbV1V1bXVlVsRXVzKqq7XZ3N6vVltU71zp3lbs2qnKr1jczQONuxvakx5odwf+3xXfbFv+3Mvy2rvz/Ozv8P28Nf9+Z/b9uzvjv+6P/uDX6r3vx/3c3/n+2cA3gTjsHcK9dA3jQroEOFrEJqkAAP+3IAJWZ2QCQ9k8AZF24YAgFyL5wiahgGFdKTGZcOkAOHVDNLdvOXSWq2NXNuMpWP1ClyLmRZpEhpRGZhJHOYVAzmFSR3c5G1WKGO8Uq8izb+ZHY4JYlS13EWXCKE9mC1yrlYinDLqRlGGxZhJNZMFmwCkDMGVnUqXIoLFeLubHBKYhNVt3kMSUxLXFaC0u4iAQrQ8qU2CmxhkQqnFNKZn5oDWvgqBuLN8FxAn2wKAT5+XEBC8a9Bx4Y0LCowEpwD0hVQHKNwrjOd/AMOEKgdGCsETQBIQHLdUdPiC/gIXgMnoKn4Rl4Bo7B0yBS1yD0N6YANIVnhCExjpvY2Xg2FvNWQ/L44cGTkNXgfuLR/UeP7xPg2EOAQ48eHHpEgIeP7j/U02NxjUpcQzrFqVaQ7fAoOw4yYySCjQRdRhUzKMYaXE+OLYnpLEkOHKOp5R3h1pKXW3acpxZmkkbFJUwvlGLRuJRLLWaZYRr7VLTEp2LLKGxlBXIoVJLMjbHgWNjYUPLZGI8Y4KKQUlZKpKZiEDOKPKGCNANh06mY1zCXeJ6Ssy+yx+TkSlxK+FFKJ2YjqUxSJuYUc2kkdUqMYGkYVUgSuaEUmLVNGZcSxlR/E4p6JCyNGFQkK1TQs8Dw2lm2Kc/HQoFCOFPh9kZYhNKg0YK0KBe3NJm1xOYiHy0oQqQIpnGGlsYrKDmk6GxZJI6rLm/H+S7YhEE3DnAyEgk1QGEk1QyjPuEWZWlECYmBVoQsYiyZUqggNVKiO8QUNLOK85Vt3AIvUeImlEgRyoBRZWF6U6vbSAVoXEIMgH0Hc0LHADQqEDlN0aRYT8JKJS45UYHGQK0oYlHQKSrwObEoLlMRKl1FJWjWXE3oMEq+SmkEiDClQ5wZMCTLCkT4G0o2jHJtpwPaGEEZrHjGTWhE8nR4OtLpVEJB3WAXQKB9lCHLEGGxGLNP+VMEyIcKcQmcJWkSCkupxLASNEZQgmJBVCrEGy40JDLsEIpTJZA+1BBDhI0gxT4cSlhAG9CGJA3B5BIWRW9QGdYANdgKVvEcSwQ28BxwqYwXZxe/ZXgcXkrCK1jCSxhBIAHSQrFDfJZFgElkXO+KHTCFGXSJ/QdcMTI1QU2Lxe4CSCTIkgLJmBYQZdFBLqhjIQGKdEIK4JRiRrYhNcQUc4ocaKJYBjvjB2mZOZs5JzYzNrMJc1lqYGxgbGYbmHuzErN8k8SiYmJ8KKpDVSVHkqSYIVNE0XCScCnDnFbGQ2FUaqmiAkKHuKqsNSVmQGqEOhkpxrQs2RJREVMbpbTcqBZNJuMR19KYdWVbCYXc/AUuWMqaRZLgYSk+S+JyIhcw/NI5xWF6y2HWKk9RLTZKqGZKnMnNlJV2K+FrpIzAAlYpMuJcEqc5GDCrJE6OQYk5nKaFa3kxpzVeVEhCLk0lTrP0dXqPUsjLKrHchllEhXHNLEokXuDJK3LKy+xQdQtmFGZJJYvb5FbIDGOy1C70GsWC/LXXRJdSVlTiiDONKHRaRBCnXDGIooLkIubiRdRYn5EXk9I0jEpRLCWyqNJHHOxRVDQkpkgZXgWSUClH/5jgYvmIy1Sqq0QFrmFFQ1K4RgdO2Tg6ZbmA2VVQMiV5UdAslZZCOWaJqoISzQE3/lFH+M5AsbzGwUEFExYxOF4b8VJCuZHlyhoxoBcJmmRfqYzAGxJSZVzCsmiNhCcpvUTJ1CdNKpW0Mqq3VNuA+QJO7QWdXisV2bgiwhzK5fKStdipOkqMXMf0PnGhMFJZU0EpwylaFgszG0q5CYMbKdvkOJdGhMXMIjFBFAIuS1yQc2NzIUy0a7BF0uBxMcfERZkgVDAuhIyKLZlGJCpkspjnEKngwIz86RKJCzOp3JDGe2mJlxc1M4fUSGtxmuNTipVKuSVhXxoLCaU5F0UyWMOlNAqsLC9uyOJKmpMIxVjCjdpJhVwYzZSE1ZCJ5VlMQimhqNLIDCnlAeQkjVyqRoyCmJtKKLMDCEqVpWLFGo4lXBnKU1m8W4oiPCmJVoJiSb4ljotxzZMnMhWDgTrGMHkDl7GYxZBE5MiNlLgwYnqGKrlYQEZJ46bBjsOVLK6ysMZmEqZrqBISSyF5zBZfbCxXkCixpZjiE/IKVcwyB5U5TuQWa8FYiheKEZYVFMlLPDcoMqKUpkKxvHGLo5BLWIULrEGbyhLj2BiQlTCnPrHqXoRRtSFmhUaYVCWuBqxIq/pEBRPlYgHK2YJpq5KSI5QD80pRwYHEXlIKS2w5mSXLq9QIJZcbJV3hUlaaWSV6jBTgwgCnHFZ8RVKcpVnUrUxKuBUlxWBMKiHlLbQAhaqxAW2Uii8fC8gL0oWYCBqQh8KsohhYlFi0hgd5cT0zRkEakW5TSSvPK8R+aQiNoTgryouGUTiJsyiWKLLGDMyoSHZQWDAmNgLhBTVSgGb2cEqhI5TCh2FSUAVLSBkrpDIoQ3FuEEiYFJC4NEVUXuG0BLZJAa6CvDgrrwfjUQ2JqHlQygwXi2Eh0awwtXCVi0ZqilAJVikNYG1RQIckhDm5SBcW5Rl5K0g5RY4bFpvHfwpTpEauUHF4I1+E7zXWTZoJMb5mXBuJTUTbhVmCZXFTCaYUEp6XFAXFFsvIVxjJicWUzCCi06iUkDzDKRTzWXHGm1nSZkQ5P6QXNSVFDlvFGN8YUTkf0QWMwFwOt5LiVq2oC5bXKV7LIpbX+vy4lCnCWuGQ5ZXhJpYTyEKqxcYiMZdCVmLNWlgZVVnMxQlKDVqgY43NlkVNrFUuRBpxlhEKaU4FiVRQwsZE7dAF45pSQS1cSylWxVdlBq5LqVYgVymLa8tQZWSpsIQslZk4XnNKPD2/eC1ykWkFcpJtSWs+pZQpYcJKlmOVJQVQ42hJCkxOdYPJe1hBsQV5kEOhUmiINqe0lhuLqRkZHVMqSuKJeVFOLrIqjclKXp6lixKTpDXtUmwtJb5uGBJXyPBpYQnprAw3iAUYy4olpWYhVdkpaSRKxRqO1m4hxWTGa+RxBatWL/I1CUuNxKLQ55Coy5cECUiZH0eClVIJi8K4WDRSFLEUGGFSrVwUcXFWhQCvEiuVlTJJKFKUkGHUcGWVVKzQbH1xdooVYcyJqMaSqsxhQGSgpYWSC0WsZEUyVfVQViMnS8WWxhKuICMXL2aeWXaKk1ILm9MpqBZMSknCKZaXMikVa0KtVNYowWpNorBGG7fQ0lqfuCzb6HFIl9dxHMfMOElZkSpLUjImU5G8uTTEbEpyYibQarjzHcAP1wnLCYAPoG97ZJIXi1X+qp0P5S0KkPMSAMqGYIGzegUQMgAIcCsA9AMAAAQ2bQCAzAMA4E5wA7SuIlcPINjbBHO3LwJaA3f7K6AjxAAb5ByAdQgEPTAF1NZtAM1ruwB3fQ3A+uxcLyH/o78N3bF0LXAHcgzA+ux7wGkYrpVdrcD1ECBC8gFAhm0AvPD6BCDEdwAIbnxIl66XFACk0yUAGrRdAI1WQ/GW2wMQrC8DtAc1AGALdQAB+sMuF0Bk/QXgo4s6Xrhh9b9zAojFdwHk3DWAN29Xdbv8f8cdX/5x9bXt48Ox09Vb+MdLG+7a5PYm14Z7nHMHyPs3O5Jn8R1vXcGGW/mLYYbr1S9t7mhR2/7S5qk3nNri2YP4EJE9oqVbj0W0Xn3Vpmq9+nHHDZv/uXVp/2jTq7dft1Ef+DFvfr3xx8PPv/33yf7+9ttdNzu/eYJdrj/d8d1nH7/77OO7n3706p+vNz9+/Ojux1/sfP3h3Ydff3j3yc5ndx7f/fTuw+8/vPvt3dff3H11+9W9V2+/7rx9cfvixe1LF69e3Nq8sHl2Y/PCxsbZ9c312dkXMy8ubnxxbubF9MzFs+szm2c2z8ysz61vrs9trM/NbcxtrM3NrW7Mrc7OXp69un71+uq1q9eurl+7tr59dn7m3PXzly6fvXz5/KVL51JNqWRSCT5IJA4/UCoP32fLDz5gyx+877V7zjnrnnPn3bv5dvcRyn0nxEP3HAt/H+u7x5Q/7zzc97HnO+bC37v/ft99jzz09DP33ffMM0/fc8/Tb731/XffkW+//e7bbxm5cYPcvEluka9+u/VbJuP23bvv3n3v/Q+dePDEiUcfefShhx577JFHnnzyyacfePLJBx966Kmnnvrk048//pR8+umnn376+ec///zzzz//7LPPv/zyy6++vgHj8/8A/AcIPRmvlU0AAAAASUVORK5CYII=') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Reset and global styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'MS Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #008080;
+    font-size: 12px;
+    overflow: hidden;
+    color: #000;
+    position: relative;
+    height: 100vh;
+}
+
+/* Windows 95 Container */
+.win95-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Taskbar */
+.taskbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 28px;
+    background-color: #c0c0c0;
+    border-top: 1px solid #fff;
+    display: flex;
+    align-items: center;
+    padding: 0 2px;
+    z-index: 9999;
+}
+
+.start-button {
+    background-color: #c0c0c0;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    padding: 2px 8px 2px 2px;
+    margin-right: 6px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    min-width: 54px;
+    height: 22px;
+}
+
+.start-button:before {
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+    background-image: url('images/start-button.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    image-rendering: pixelated;
+}
+
+.start-button:active {
+    border-color: #000 #fff #fff #000;
+    padding: 3px 7px 1px 3px;
+}
+
+/* Mobile adjustments for start button */
+@media (max-width: 768px) {
+    .start-button {
+        padding: 4px 12px 4px 4px;
+        height: 32px;
+        min-width: 72px;
+    }
+
+    .start-button:before {
+        width: 24px;
+        height: 24px;
+        margin-right: 6px;
+    }
+
+    .start-button:active {
+        padding: 5px 11px 3px 5px;
+    }
+}
+
+.taskbar-user {
+    display: flex;
+    align-items: center;
+    margin-left: 5px;
+    padding: 2px 8px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    font-size: 11px;
+    background-color: #d4d0c8;
+}
+
+.taskbar-user img {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+}
+
+.taskbar-chatrooms {
+    display: flex;
+    align-items: center;
+    margin-left: 5px;
+    padding: 2px 8px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    font-size: 11px;
+    background-color: #d4d0c8;
+    cursor: pointer;
+}
+
+.taskbar-chatrooms:hover {
+    background-color: #e0e0e0;
+}
+
+.taskbar-chatrooms img {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+}
+
+.taskbar-time {
+    margin-left: auto;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    padding: 2px 8px;
+}
+
+/* Desktop Icons */
+.desktop {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.desktop-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80px;
+    cursor: pointer;
+}
+
+.desktop-icon img {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 5px;
+}
+
+.desktop-icon span {
+    color: white;
+    text-align: center;
+    text-shadow: 1px 1px 1px black;
+}
+
+/* Windows 95 button style */
+.win95-button {
+    background-color: #c0c0c0;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    padding: 4px 10px;
+    font-family: 'MS Sans Serif', sans-serif;
+    font-size: 11px;
+    cursor: pointer;
+    outline: none;
+}
+
+.win95-button:active {
+    border-color: #000 #fff #fff #000;
+}
+
+/* Windows 95 window style */
+.window {
+    position: absolute;
+    background-color: #c0c0c0;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    min-width: 300px;
+    min-height: 200px;
+    z-index: 100;
+}
+
+/* Desktop-only window resizing */
+@media (min-width: 1025px) {
+    .window:not(.login-window):not(.dialog) {
+        resize: both; /* Enable resizing */
+        overflow: auto; /* Required for resize to work */
+    }
+    
+    /* Ensure maximized windows don't show resize handle */
+    .window.maximized {
+        resize: none;
+    }
+    
+    /* Resizable handle style */
+    .window:not(.login-window):not(.dialog)::after {
+        content: "";
+        position: absolute;
+        bottom: 3px;
+        right: 3px;
+        width: 16px;
+        height: 16px;
+        cursor: nwse-resize;
+        background-image: linear-gradient(135deg, 
+            transparent 0%, transparent 45%, 
+            #808080 45%, #808080 50%, 
+            transparent 50%, transparent 70%, 
+            #808080 70%, #808080 75%, 
+            transparent 75%, transparent 95%, 
+            #808080 95%, #808080 100%);
+        pointer-events: none; /* Allow clicks to pass through */
+        z-index: 10; /* Ensure it's above other content */
+    }
+    
+    /* Hide the handle when maximized */
+    .window.maximized::after {
+        display: none;
+    }
+    
+    /* Add a tooltip to show resize capability */
+    .window:not(.login-window):not(.dialog) .window-header::after {
+        content: "Double-click to maximize";
+        position: absolute;
+        right: 80px;
+        top: 1px;
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.5);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+    
+    .window:not(.login-window):not(.dialog) .window-header:hover::after {
+        opacity: 1;
+    }
+}
+
+.login-window {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 400px;
+    height: auto; /* Changed from fixed height to auto */
+    min-height: 320px; /* Added min-height instead of fixed height */
+    background-color: #c0c0c0;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 150;
+    overflow: hidden;
+    max-width: calc(100% - 20px);
+    max-height: 90vh;
+}
+
+.window-header {
+    background-color: #000080;
+    color: white;
+    padding: 2px 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: move;
+}
+
+.window-title {
+    font-weight: bold;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.window-controls {
+    display: flex;
+}
+
+.control-button {
+    width: 16px;
+    height: 14px;
+    background-color: #c0c0c0;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    margin-left: 2px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.control-button:active {
+    border-color: #000 #fff #fff #000;
+}
+
+.window-content {
+    padding: 10px;
+    overflow: auto;
+    height: calc(100% - 20px);
+    background-color: #c0c0c0;
+}
+
+.login-window .window-content {
+    padding: 15px;
+    overflow: visible; /* Changed from auto to visible for login window */
+    height: auto; /* Changed to auto height */
+}
+
+/* Login styles */
+.login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    height: 100%;
+    overflow: visible; /* Changed from hidden to visible */
+}
+
+.aol-logo {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 10px;
+}
+
+.login-container h2 {
+    font-size: 14px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 12px;
+    width: 100%;
+    max-width: 280px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+
+.form-group input {
+    width: 100%;
+    height: 30px;
+    padding: 5px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    background-color: white;
+    font-size: 14px;
+}
+
+/* Login and Register form containers */
+.login-form, .register-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.register-form {
+    margin-bottom: 15px; /* Add extra bottom margin to register form */
+}
+
+/* Login and register buttons */
+#login-button, #show-register, #register-button, #show-login {
+    width: 100%;
+    max-width: 280px;
+    margin-bottom: 8px;
+}
+
+/* Login actions container */
+.login-actions {
+    display: flex;
+    width: 100%;
+    max-width: 280px;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+/* Primary and secondary buttons */
+.primary-button {
+    background-color: #316ac5;
+    color: #fff;
+    border-color: #5d9ffd #153582 #153582 #5d9ffd;
+    font-weight: bold;
+    flex: 3;
+}
+
+.primary-button:active {
+    border-color: #153582 #5d9ffd #5d9ffd #153582;
+}
+
+.secondary-button {
+    flex: 2;
+}
+
+/* Mobile optimizations for buttons */
+@media (max-width: 768px) {
+    .login-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .primary-button, .secondary-button {
+        width: 100%;
+        height: 44px;
+        font-size: 16px;
+        padding: 10px;
+    }
+}
+
+/* Landscape mode adjustments for login actions */
+@media (max-height: 400px) and (orientation: landscape) {
+    .login-actions {
+        flex-direction: row;
+    }
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+    width: 100%;
+    max-width: 280px;
+}
+
+/* Mobile optimizations for login/register */
+@media (max-width: 768px) {
+    body {
+        overflow-y: auto;
+        height: 100%;
+        position: fixed;
+        width: 100%;
+    }
+
+    .win95-container {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+    }
+
+    .splash-screen img {
+        width: 90%;
+        max-width: 400px;
+        height: auto;
+        max-height: 300px;
+    }
+
+    .login-window {
+        width: 90% !important;
+        max-width: 400px !important;
+        height: auto !important;
+        min-height: 300px !important;
+        max-height: 90vh !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .login-container {
+        padding: 15px;
+        min-height: 100%;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group input {
+        height: 40px;
+        font-size: 16px;
+        padding: 8px 10px;
+    }
+
+    /* Make buttons in login/register forms more touch-friendly */
+    #login-button, #show-register, #register-button, #show-login {
+        display: block;
+        width: 100%;
+        margin-bottom: 10px;
+        height: 44px;
+        font-size: 16px;
+        padding: 8px;
+    }
+
+    .form-actions {
+        flex-direction: column;
+        gap: 8px;
+        padding: 0 15px;
+    }
+
+    .form-actions .win95-button {
+        width: 100%;
+        height: 44px;
+        font-size: 16px;
+        padding: 8px;
+    }
+    
+    /* Better mobile transitions for form switching */
+    .login-form.active, .register-form.active {
+        display: block;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Enhanced tap targets for better mobile experience */
+    input[type="text"],
+    input[type="password"] {
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(0,0,0,0);
+    }
+    
+    /* Remove outline for mobile */
+    .win95-button:focus,
+    input:focus {
+        outline: none;
+    }
+}
+
+/* Small phones */
+@media (max-width: 320px) {
+    .login-window {
+        min-height: 280px !important;
+    }
+
+    .login-container {
+        padding: 10px;
+    }
+
+    .aol-logo {
+        width: 40px;
+        height: 40px;
+    }
+
+    #login-button, #show-register, #register-button, #show-login {
+        padding: 6px;
+    }
+
+    .form-group {
+        margin-bottom: 10px;
+    }
+}
+
+/* Landscape mode adjustments */
+@media (max-height: 400px) and (orientation: landscape) {
+    .login-window {
+        max-height: 90vh !important;
+        min-height: auto !important;
+        height: auto !important;
+    }
+
+    .login-container {
+        padding: 10px;
+    }
+
+    /* Arrange login buttons side by side in landscape */
+    #login-button, #show-register {
+        display: inline-block;
+        width: calc(50% - 5px);
+    }
+
+    #register-button, #show-login {
+        display: inline-block;
+        width: calc(50% - 5px);
+    }
+
+    #show-register, #show-login {
+        margin-left: 10px;
+    }
+}
+
+/* Fix for iOS devices */
+@supports (-webkit-touch-callout: none) {
+    .login-window {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        height: auto !important;
+        min-height: 300px !important;
+        max-height: 85vh !important;
+        width: 90% !important;
+        max-width: 400px !important;
+        padding-bottom: env(safe-area-inset-bottom);
+        overflow: hidden !important;
+    }
+
+    body {
+        height: -webkit-fill-available;
+    }
+
+    .win95-container {
+        height: -webkit-fill-available;
+    }
+
+    /* Fix iOS form elements */
+    input, textarea, select {
+        font-size: 16px !important; /* Prevents zoom on input focus in iOS */
+        border-radius: 0; /* Removes iOS default styling */
+        -webkit-appearance: none; /* Removes iOS default styling */
+    }
+
+    /* Fix button display on iOS */
+    .win95-button {
+        -webkit-appearance: none;
+        border-radius: 0;
+    }
+}
+
+/* Ensure proper viewport height on mobile */
+:root {
+    --vh: 1vh;
+}
+
+@supports (height: 100dvh) {
+    body {
+        height: 100dvh;
+    }
+    
+    .win95-container {
+        min-height: 100dvh;
+        height: 100dvh;
+    }
+    
+    .login-window {
+        max-height: 90dvh !important;
+    }
+}
+
+/* Desktop and Tablet optimization */
+@media (min-width: 768px) {
+    .login-window {
+        width: 450px !important;
+        height: auto !important;
+        min-height: 380px !important; /* Increased min-height for register form */
+    }
+    
+    /* Compact spacing for desktop register form */
+    .register-form .form-group {
+        margin-bottom: 10px;
+    }
+    
+    /* More spacing between register form elements */
+    .register-form {
+        padding-bottom: 10px;
+    }
+}
+
+/* Tablet-specific adjustments */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .form-group input {
+        padding: 10px;
+        font-size: 16px;
+        height: 44px;
+    }
+
+    #login-button, #show-register, #register-button, #show-login {
+        padding: 12px 20px;
+        font-size: 16px;
+        height: 44px;
+        margin-bottom: 12px;
+    }
+
+    .form-actions .win95-button {
+        padding: 12px 20px;
+        font-size: 16px;
+        height: 44px;
+    }
+    
+    .login-container {
+        padding: 20px;
+    }
+    
+    .aol-logo {
+        width: 56px;
+        height: 56px;
+        margin-bottom: 15px;
+    }
+}
+
+/* High contrast and reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .login-window {
+        transition: none !important;
+    }
+}
+
+@media (forced-colors: active) {
+    .login-window {
+        border: 2px solid CanvasText;
+    }
+
+    .form-group input {
+        border: 2px solid CanvasText;
+    }
+}
+
+/* Chatrooms window */
+#chatrooms-window {
+    top: 50px;
+    left: 50px;
+    width: 400px;
+    height: 400px;
+}
+
+.toolbar {
+    border-bottom: 1px solid #808080;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    display: flex;
+    gap: 5px;
+}
+
+.room-list {
+    height: calc(100% - 40px);
+    overflow-y: auto;
+    background-color: #fff;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    padding: 5px;
+}
+
+.room-item {
+    padding: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.room-item:hover {
+    background-color: #e0e0e0;
+}
+
+.room-icon {
+    margin-right: 10px;
+    width: 16px;
+    height: 16px;
+}
+
+.room-name {
+    font-weight: bold;
+}
+
+.room-info {
+    margin-left: auto;
+    color: #808080;
+    font-size: 10px;
+}
+
+/* Dialog Window */
+.dialog {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: auto;
+    z-index: 200;
+    background-color: #c0c0c0;
+}
+
+.dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 5px;
+    margin-top: 20px;
+}
+
+/* Chat window */
+.chat-window {
+    width: 500px;
+    height: 400px;
+    top: 100px;
+    left: 100px;
+}
+
+.chat-messages {
+    height: calc(100% - 60px);
+    overflow-y: auto;
+    background-color: #fff;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+.chat-status {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #808080;
+    margin-bottom: 5px;
+    height: 15px;
+}
+
+.chat-input {
+    display: flex;
+    gap: 5px;
+    padding: 5px;
+    background-color: #c0c0c0;
+    border-top: 1px solid #808080;
+    padding-right: 20px; /* Add extra padding on the right for resize handle */
+}
+
+.message-input {
+    flex-grow: 1;
+    padding: 3px 5px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    background-color: #fff;
+    font-family: 'MS Sans Serif', sans-serif;
+    font-size: 12px;
+}
+
+.send-button {
+    white-space: nowrap;
+}
+
+/* Chat message styles */
+.message {
+    margin-bottom: 8px;
+    padding: 5px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    background-color: #fff;
+}
+
+.message-header {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 2px;
+    font-family: 'MS Sans Serif', sans-serif;
+}
+
+.message-sender {
+    font-weight: bold;
+    margin-right: 5px;
+    color: #000080;
+}
+
+.message-time {
+    font-size: 10px;
+    color: #808080;
+}
+
+.message-content {
+    word-wrap: break-word;
+    font-family: 'MS Sans Serif', sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.system-message {
+    color: #808080;
+    font-style: italic;
+    font-size: 11px;
+    margin: 5px 0;
+    padding: 3px 5px;
+    background-color: #efefef;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+}
+
+/* Loading indicator */
+.loading {
+    color: #808080;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Typing indicator */
+.typing-indicator {
+    font-style: italic;
+    color: #808080;
+    font-size: 11px;
+    font-family: 'MS Sans Serif', sans-serif;
+}
+
+/* Minimized window in taskbar */
+.taskbar-item {
+    background-color: #c0c0c0;
+    border: 1px solid;
+    border-color: #000 #fff #fff #000;
+    padding: 2px 8px;
+    margin-right: 3px;
+    font-size: 11px;
+    max-width: 150px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.taskbar-item.active {
+    border-color: #fff #000 #000 #fff;
+    background-color: #d3d3d3;
+}
+
+/* Start Menu */
+.start-menu {
+    position: absolute;
+    bottom: 28px;
+    left: 0;
+    width: 220px;
+    background-color: #c0c0c0;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 9998;
+    display: none;
+}
+
+.start-menu-header {
+    background: linear-gradient(to right, #000080, #1084d0);
+    color: white;
+    padding: 3px 8px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.start-menu-title {
+    font-weight: bold;
+    font-size: 14px;
+    transform: rotate(-90deg);
+    transform-origin: left center;
+    position: absolute;
+    left: 16px;
+    top: 100px;
+}
+
+.start-menu-items {
+    padding: 2px;
+    margin-left: 20px;
+}
+
+.start-menu-item {
+    padding: 4px 5px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.start-menu-item:hover {
+    background-color: #000080;
+    color: white;
+}
+
+.start-menu-item img {
+    width: 16px;
+    height: 16px;
+    margin-right: 5px;
+}
+
+.start-menu-divider {
+    height: 1px;
+    margin: 4px 0;
+    background-color: #808080;
+}
+
+.start-button.active {
+    border-color: #000 #fff #fff #000;
+    background-color: #d4d0c8;
+}
+
+/* Active Now Styling */
+.active-users-list {
+    height: 100%;
+    overflow-y: auto;
+    background-color: #fff;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    padding: 5px;
+}
+
+.active-user-item {
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.active-user-item:hover {
+    background-color: #e0e0e0;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #d4d0c8;
+    margin-right: 10px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #808080;
+}
+
+.user-avatar:after {
+    content: "";
+    display: block;
+    width: 20px;
+    height: 20px;
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwQAADsEBuJFr7QAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC4xOdTWsmQAAAFVSURBVDhPjZLLSsNAFIYzMzfJTJK2SboRF4J4Bd2JggvBha/hwrW+gDufQlyJCxHBlS5c+AyC4EZciLgQLPYiaWqSvpvkOEeTtDYVB/4M55z/+88wQ8h/3dTr2jpN097tdqemabtjUJblMl5VMrlfafPAGdiartdniqLM4MX7qqrmiDFWRk9wnmez13Z7qlBKPTpCkHQ6PeF5PonjOIzjeIRgVAOSNWgOw7ABYCR9gHUu0XVYG2MMwD8B+qAGJGvQHARB487zxlySFKSOA/OgBiRrfzez2VsikUhxWUaZJD0VCNiCGpCs/dWZ6R45TRTFgmUYRwUC1+r1PSZJEld/a7ebMGUt0pRxsA9qQLLGRXEc+1ySNoHnbUSiKMoaVVVbEBABP6q1WpXBp6YoikOFUhoYhrGCdwABjut5E3g+Z9s27XQ6U/BSybZte3aR5/N5Bf7Ef5FovyJRCPkF9Xg5I5s04FsAAAAASUVORK5CYII=');
+}
+
+.user-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    border: 1px solid #fff;
+}
+
+.user-status.online {
+    background-color: #00ca00;
+}
+
+.user-status.offline {
+    background-color: #808080;
+}
+
+.user-info {
+    flex-grow: 1;
+}
+
+.user-name {
+    font-weight: bold;
+}
+
+.user-status-text {
+    font-size: 10px;
+    color: #808080;
+}
+
+.message-button {
+    font-size: 10px;
+    padding: 2px 5px;
+}
+
+/* Instant Messaging */
+.direct-message-window {
+    width: 350px;
+    height: 300px;
+}
+
+.dm-messages {
+    height: calc(100% - 60px);
+    overflow-y: auto;
+    background-color: #fff;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+/* Message styles */
+.message.sent {
+    background-color: #efefef;
+    margin-left: 20px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+}
+
+.message.received {
+    background-color: #fff;
+    margin-right: 20px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+}
+
+/* Historical message indicator */
+.message.history {
+    opacity: 0.9;
+}
+
+/* Load more button for chat history */
+.load-more {
+    text-align: center;
+    padding: 8px 0;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed #808080;
+}
+
+.load-more button {
+    font-size: 11px;
+    padding: 3px 8px;
+}
+
+.load-more .loading {
+    padding: 5px;
+    color: #808080;
+    font-style: italic;
+}
+
+/* Profile Styles */
+.profile-container {
+    padding: 10px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #808080;
+}
+
+.profile-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: #007BFF;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin-right: 15px;
+    border: 1px solid #000;
+}
+
+.profile-info {
+    flex-grow: 1;
+}
+
+.profile-nickname {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.profile-status {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.profile-status:before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.profile-status.online:before {
+    background-color: #00ca00;
+}
+
+.profile-status.offline:before {
+    background-color: #808080;
+}
+
+.profile-section {
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #c0c0c0;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+}
+
+.section-title {
+    font-size: 14px;
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #000080;
+}
+
+.form-group {
+    margin-bottom: 10px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.win95-input, .win95-textarea {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    background-color: white;
+    font-family: 'MS Sans Serif', sans-serif;
+    font-size: 12px;
+}
+
+.win95-textarea {
+    resize: none;
+}
+
+.color-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.color-option {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid #000;
+}
+
+.color-option.selected {
+    border: 3px solid #000;
+}
+
+.status-options {
+    display: flex;
+    gap: 15px;
+}
+
+.status-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-dot.online {
+    background-color: #00ca00;
+}
+
+.status-dot.offline {
+    background-color: #808080;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+}
+
+.win95-checkbox {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.win95-checkbox input {
+    margin-right: 5px;
+}
+
+.profile-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* Updated Active Now styles */
+.active-users-controls {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.auto-refresh-status {
+    font-size: 10px;
+    color: #008000;
+    padding: 2px 5px;
+    background-color: #efefef;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+}
+
+.active-users-list {
+    height: calc(100% - 30px);
+}
+
+.user-avatar {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    border: 1px solid #000;
+}
+
+.user-avatar:after {
+    content: none;
+}
+
+.loading.error {
+    color: #DC3545;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    /* Window positioning and sizing */
+    .window {
+        width: 95% !important;
+        height: 85% !important;
+        top: 7.5% !important;
+        left: 2.5% !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Login window specific sizing that overrides the general window class */
+    .login-window {
+        width: 90% !important;
+        height: auto !important;
+        min-height: 300px !important;
+        max-height: 90vh !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        padding-bottom: env(safe-area-inset-bottom);
+        overflow: hidden !important;
+    }
+    
+    /* Dialog specific styles */
+    .dialog {
+        width: 90% !important;
+        max-height: 90vh !important;
+        height: auto !important;
+        overflow-y: auto !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+    }
+    
+    /* Start menu takes full width on mobile */
+    .start-menu {
+        width: 100%;
+        left: 0;
+    }
+
+    /* Enhanced mobile optimizations */
+    .desktop {
+        padding: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 20px;
+        justify-items: center;
+    }
+
+    .desktop-icon {
+        width: 70px;
+    }
+
+    .desktop-icon span {
+        font-size: 11px;
+        max-width: 70px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Taller taskbar for mobile */
+    .taskbar {
+        height: 40px;
+        padding: 0 5px;
+        padding-bottom: env(safe-area-inset-bottom);
+        height: calc(40px + env(safe-area-inset-bottom));
+    }
+
+    .start-button, .taskbar-user, .taskbar-chatrooms {
+        padding: 5px 10px;
+        font-size: 14px;
+    }
+
+    .taskbar-time {
+        font-size: 14px;
+        padding: 5px 10px;
+    }
+
+    /* Make content scrollable properly on mobile */
+    .window-content {
+        -webkit-overflow-scrolling: touch;
+        overflow-y: auto;
+        padding: 15px;
+    }
+
+    /* Sticky chat input */
+    .chat-input {
+        position: sticky;
+        bottom: 0;
+        background: #c0c0c0;
+        padding: 10px;
+        margin: -5px;
+        border-top: 1px solid #808080;
+        gap: 10px;
+        z-index: 10;
+    }
+
+    /* Larger inputs and buttons for touch */
+    .message-input {
+        font-size: 16px;
+        padding: 8px;
+        height: 44px;
+    }
+
+    .send-button {
+        padding: 8px 15px;
+        font-size: 14px;
+        height: 44px;
+    }
+
+    /* Larger window controls */
+    .control-button {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+    }
+
+    /* More touch area for list items */
+    .room-item {
+        padding: 15px 8px;
+        min-height: 44px;
+    }
+
+    .room-name {
+        font-size: 14px;
+    }
+
+    /* Larger headers */
+    .window-header {
+        padding: 8px;
+    }
+
+    .window-title {
+        font-size: 14px;
+    }
+
+    /* Prevent iOS zoom on input focus and form styling */
+    input[type="text"],
+    input[type="password"],
+    textarea,
+    select {
+        font-size: 16px !important;
+        padding: 10px !important;
+        height: 44px;
+        -webkit-appearance: none;
+        border-radius: 0;
+    }
+
+    /* Larger buttons for touch */
+    .win95-button {
+        padding: 10px 15px;
+        font-size: 14px;
+        min-height: 44px;
+        -webkit-appearance: none;
+        border-radius: 0;
+    }
+
+    /* Special styling for login/signup buttons */
+    #login-button, #show-register, #register-button, #show-login {
+        width: 100%;
+        margin-bottom: 10px;
+        height: 44px; 
+        padding: 10px;
+    }
+
+    /* Better mobile scrolling for list views */
+    .chat-messages,
+    .room-list,
+    .active-users-list {
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        padding: 10px;
+        margin-bottom: 10px;
+        scroll-behavior: smooth;
+        scrollbar-color: #888 #f1f1f1;
+    }
+
+    /* Touch feedback effects */
+    .desktop-icon:active,
+    .room-item:active,
+    .win95-button:active {
+        opacity: 0.7;
+    }
+
+    /* Better message display */
+    .message {
+        padding: 10px;
+        margin-bottom: 12px;
+    }
+
+    /* Better form spacing */
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    /* Safe area insets for notched devices */
+    .window {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* Add support for different screen orientations */
+@media (orientation: landscape) and (max-width: 768px) {
+    /* General window adjustments for landscape */
+    .window {
+        height: 85vh !important;
+        top: 5vh !important;
+        max-height: calc(100vh - 50px) !important;
+    }
+    
+    /* Login window specific landscape adjustments */
+    .login-window {
+        width: 85% !important;
+        max-width: 500px !important;
+        height: auto !important;
+        min-height: auto !important;
+        max-height: 85vh !important;
+        overflow: hidden !important;
+    }
+    
+    /* Adjust login container for landscape */
+    .login-container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .login-container .aol-logo {
+        margin-right: 15px;
+    }
+    
+    .login-container h2 {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    
+    /* Spread desktop icons more in landscape */
+    .desktop {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+    
+    /* Adjust form layout for landscape */
+    .login-form, .register-form {
+        width: 100%;
+    }
+    
+    /* Make form buttons side by side in landscape */
+    #login-button, #show-register, #register-button, #show-login {
+        display: inline-block;
+        width: calc(50% - 5px);
+        margin-bottom: 0;
+    }
+    
+    #show-register, #show-login {
+        margin-left: 10px;
+    }
+    
+    /* Adjust taskbar for landscape */
+    .taskbar {
+        height: 30px;
+        padding-bottom: env(safe-area-inset-bottom);
+        height: calc(30px + env(safe-area-inset-bottom));
+    }
+}
+
+/* Add support for larger mobile devices and tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+    /* Adjust desktop layout */
+    .desktop {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        padding: 15px;
+    }
+
+    /* Style windows better on tablets */
+    .window {
+        width: 80% !important;
+        height: 70% !important;
+        top: 15% !important;
+        left: 10% !important;
+    }
+    
+    /* Login window specific adjustments for tablets */
+    .login-window {
+        width: 450px !important;
+        height: auto !important;
+        min-height: 350px !important;
+        max-height: 90vh !important;
+        overflow: hidden !important;
+    }
+    
+    /* Adjust login form elements for better usability */
+    .login-container {
+        padding: 20px;
+    }
+    
+    .login-container h2 {
+        font-size: 16px;
+        margin-bottom: 20px;
+    }
+    
+    .form-group input {
+        height: 44px;
+        font-size: 16px;
+        padding: 10px;
+    }
+    
+    /* Make buttons more prominent and touch-friendly */
+    #login-button, #show-register, #register-button, #show-login {
+        height: 44px;
+        font-size: 16px;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+    }
+}
+
+/* Enhanced touch interactions */
+@media (hover: none) and (pointer: coarse) {
+    /* Improve touch targets */
+    .desktop-icon,
+    .room-item,
+    .control-button,
+    .win95-button,
+    .start-button {
+        min-height: 44px; /* Apple's recommended minimum touch size */
+    }
+
+    .window-controls {
+        gap: 8px;
+    }
+
+    .control-button {
+        width: 32px;
+        height: 32px;
+    }
+
+    /* Improve form elements for touch */
+    input, select, textarea {
+        min-height: 44px;
+        font-size: 16px !important; /* Prevent iOS zoom */
+    }
+
+    /* Add touch feedback */
+    .desktop-icon:active,
+    .room-item:active,
+    .win95-button:active,
+    .control-button:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
+    }
+}
+
+/* Safe area insets for modern mobile devices */
+@supports (padding: max(0px)) {
+    .window {
+        padding-left: max(10px, env(safe-area-inset-left));
+        padding-right: max(10px, env(safe-area-inset-right));
+    }
+
+    .taskbar {
+        padding-bottom: max(0px, env(safe-area-inset-bottom));
+    }
+}
+
+/* Active Users Icon specific styles */
+#active-users-icon {
+    position: relative;
+}
+
+#active-users-icon img {
+    width: 32px;
+    height: 32px;
+    filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.5));
+}
+
+#active-users-icon .user-count {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    background: #00ca00;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.splash-screen img {
+    width: 400px;
+    height: 300px;
+    object-fit: contain;
+}
+
+/* Mobile optimization for splash screen */
+@media (max-width: 768px) {
+    .splash-screen img {
+        width: 90%;
+        height: auto;
+        max-height: 80vh;
+    }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    /* Improve touch targets */
+    .window-controls button {
+        min-width: 44px;
+        min-height: 44px;
+        margin: 2px;
+    }
+
+    /* Improve form inputs */
+    input[type="text"],
+    input[type="password"],
+    textarea,
+    select {
+        font-size: 16px !important;
+        padding: 12px !important;
+        margin-bottom: 16px;
+        border-radius: 4px;
+    }
+
+    /* Improve buttons */
+    .win95-button {
+        padding: 12px 20px;
+        font-size: 16px;
+        min-height: 44px;
+    }
+
+    /* Improve scrolling */
+    .chat-messages,
+    .room-list,
+    .active-users-list {
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+
+    /* Add touch feedback */
+    .desktop-icon:active,
+    .room-item:active,
+    .win95-button:active {
+        opacity: 0.7;
+    }
+
+    /* Prevent zoom on input focus for iOS */
+    @media screen and (-webkit-min-device-pixel-ratio: 0) {
+        select,
+        textarea,
+        input {
+            font-size: 16px !important;
+        }
+    }
+
+    /* Improve modal handling */
+    .dialog {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    /* Improve message display */
+    .chat-messages,
+    .room-list,
+    .active-users-list {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .message {
+        padding: 12px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+    }
+
+    .chat-input {
+        padding: 15px;
+        gap: 15px;
+    }
+
+    /* Improved spacing */
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .window-content {
+        padding: 20px;
+    }
+
+    /* Better scrolling experience */
+    .chat-messages,
+    .room-list,
+    .active-users-list {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        scrollbar-width: thin;
+        scrollbar-color: #888 #f1f1f1;
+    }
+
+    /* Safe area insets for modern devices */
+    .window {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .taskbar {
+        padding-bottom: env(safe-area-inset-bottom);
+        height: calc(40px + env(safe-area-inset-bottom));
+    }
+}
+
+/* Add support for different screen orientations */
+@media (orientation: landscape) and (max-width: 768px) {
+    .window {
+        height: 90vh !important;
+        top: 5vh !important;
+    }
+
+    .desktop {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+}
+
+/* Add support for larger mobile devices and tablets */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .window {
+        width: 90% !important;
+        height: 80% !important;
+        top: 10% !important;
+        left: 5% !important;
+    }
+
+    .desktop-icon {
+        width: 100px;
+    }
+
+    .desktop-icon img {
+        width: 48px;
+        height: 48px;
+    }
+
+    .desktop-icon span {
+        font-size: 14px;
+    }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* High contrast mode */
+@media (forced-colors: active) {
+    .window {
+        border: 2px solid CanvasText;
+    }
+
+    .win95-button {
+        border: 2px solid CanvasText;
+    }
+}

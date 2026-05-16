@@ -1,0 +1,7 @@
+# Force Nixpacks to treat this repo as a Node-only project.
+# Without this, it sees index.php/backend.php and tries to build a hybrid
+# PHP+Node+nginx image, which fails on a too-new nodejs_24 nix attribute.
+providers = ["node"]
+
+[phases.setup]
+nixPkgs = ["nodejs_22"]

@@ -7,7 +7,7 @@ session_start();
 //   $WS_HOST = 'aim-chat-production.up.railway.app';
 // You can also set it via the WS_HOST environment variable in cPanel.
 // ---------------------------------------------------------------------------
-$WS_HOST = getenv('WS_HOST') ?: 'REPLACE_WITH_RAILWAY_DOMAIN.up.railway.app';
+$WS_HOST = getenv('WS_HOST') ?: 'web-production-8a622.up.railway.app';
 
 // Handle logout
 if (isset($_GET['logout'])) {

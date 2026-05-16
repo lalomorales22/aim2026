@@ -1,3 +1,15 @@
+// CSRF-aware POST helper. Reads window.CSRF_TOKEN injected by index.php.
+window.apiPost = function (endpoint, payload) {
+    return fetch(`backend.php?endpoint=${endpoint}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': window.CSRF_TOKEN || ''
+        },
+        body: JSON.stringify(payload)
+    });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     // Set up resize end handler for resizable windows (desktop only)
     if (window.innerWidth >= 1025) {
@@ -113,13 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loginButton.disabled = true;
             loginButton.textContent = 'Signing In...';
             
-            fetch('backend.php?endpoint=login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            })
+            window.apiPost('login', { username, password })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -184,13 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
             registerButton.disabled = true;
             registerButton.textContent = 'Creating Account...';
             
-            fetch('backend.php?endpoint=register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            })
+            window.apiPost('register', { username, password })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -1255,13 +1255,7 @@ function createNewRoom() {
     
     console.log('Creating new room:', roomName);
     
-    fetch('backend.php?endpoint=create-room', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ name: roomName })
-    })
+    window.apiPost('create-room', { name: roomName })
     .then(response => {
         console.log('Create room response status:', response.status);
         console.log('Create room response headers:', Object.fromEntries(response.headers.entries()));
@@ -1566,16 +1560,7 @@ function addChatMessage(roomId, nickname, message, timestamp) {
 
 // Save message to database
 function saveChatMessageToDatabase(roomId, message) {
-    fetch('backend.php?endpoint=save-message', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            room_id: roomId,
-            message: message
-        })
-    })
+    window.apiPost('save-message', { room_id: roomId, message: message })
     .then(response => response.json())
     .catch(error => {
         console.error('Error saving message to database:', error);
@@ -1652,9 +1637,10 @@ function connectToWebSocket() {
         // Get user profile
         const profile = getUserProfile();
         
-        // Identify user to server
+        // Identify user to server (token verified server-side via WS_SECRET).
         socket.send(JSON.stringify({
             type: 'identify',
+            token: window.WS_TOKEN || '',
             nickname: userInfo.nickname,
             displayName: profile.displayName,
             status: profile.status,
@@ -1756,16 +1742,7 @@ function connectToWebSocket() {
     
     // Fallback for sending messages if WebSocket fails
     window.sendMessageFallback = function(roomId, message) {
-        fetch('backend.php?endpoint=save-message', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                room_id: roomId,
-                message: message
-            })
-        })
+        window.apiPost('save-message', { room_id: roomId, message: message })
         .then(response => response.json())
         .then(data => {
             if (data.success) {

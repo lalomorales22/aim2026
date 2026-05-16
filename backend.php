@@ -7,6 +7,34 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// --- CSRF -----------------------------------------------------------------
+// One token per session, regenerated only on auth state change.
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+function require_csrf() {
+    $hdr = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (!isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $hdr)) {
+        http_response_code(403);
+        echo json_encode(['error' => 'invalid csrf token']);
+        exit;
+    }
+}
+
+// --- WS auth token --------------------------------------------------------
+// Mints an HMAC-signed token that the Node WS server verifies on `identify`.
+// PHP and Node share the secret via the WS_SECRET environment variable on
+// both Bluehost and Railway. Without it, falls back to a non-HMAC marker so
+// the system still works during the rollout — set WS_SECRET in both places.
+function mint_ws_token($nickname, $ttlSeconds = 86400) {
+    $payload = json_encode(['nickname' => $nickname, 'exp' => time() + $ttlSeconds]);
+    $b64 = rtrim(strtr(base64_encode($payload), '+/', '-_'), '=');
+    $secret = getenv('WS_SECRET');
+    $sig = $secret ? hash_hmac('sha256', $b64, $secret) : 'dev';
+    return "$b64.$sig";
+}
+
 // Database setup
 $dbFile = __DIR__ . '/chatrooms.db';
 $dbDir = __DIR__;
@@ -82,33 +110,54 @@ try {
                 echo json_encode(['error' => 'Method not allowed']);
                 break;
             }
-            
+            require_csrf();
+
             $data = json_decode(file_get_contents('php://input'), true);
             $username = $data['username'] ?? '';
             $password = $data['password'] ?? '';
-            
+
             if (empty($username) || empty($password)) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Username and password are required']);
                 break;
             }
-            
-            $stmt = $db->prepare('SELECT id, username FROM users WHERE username = :username AND password = :password');
-            $stmt->execute([
-                'username' => $username,
-                'password' => hash('sha256', $password)
-            ]);
-            
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($user) {
-                $_SESSION['user'] = $user;
-                $_SESSION['nickname'] = $user['username']; // For backward compatibility
-                echo json_encode(['success' => true, 'user' => $user]);
-            } else {
+
+            $stmt = $db->prepare('SELECT id, username, password FROM users WHERE username = :username');
+            $stmt->execute(['username' => $username]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $valid = false;
+            if ($row) {
+                $stored = $row['password'];
+                if (strncmp($stored, '$2', 2) === 0) {
+                    // bcrypt
+                    $valid = password_verify($password, $stored);
+                } elseif (hash_equals($stored, hash('sha256', $password))) {
+                    // Legacy SHA-256 — accept once, then upgrade in place.
+                    $valid = true;
+                    $newHash = password_hash($password, PASSWORD_BCRYPT);
+                    $upd = $db->prepare('UPDATE users SET password = :pw WHERE id = :id');
+                    $upd->execute(['pw' => $newHash, 'id' => $row['id']]);
+                }
+            }
+
+            if (!$valid) {
                 http_response_code(401);
                 echo json_encode(['error' => 'Invalid username or password']);
+                break;
             }
+
+            $user = ['id' => $row['id'], 'username' => $row['username']];
+            $_SESSION['user'] = $user;
+            $_SESSION['nickname'] = $user['username'];
+            // Rotate CSRF on auth state change to prevent fixation.
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+            echo json_encode([
+                'success' => true,
+                'user' => $user,
+                'csrf_token' => $_SESSION['csrf_token'],
+                'ws_token' => mint_ws_token($user['username']),
+            ]);
             break;
             
         case 'register':
@@ -117,18 +166,18 @@ try {
                 echo json_encode(['error' => 'Method not allowed']);
                 break;
             }
-            
+            require_csrf();
+
             $data = json_decode(file_get_contents('php://input'), true);
             $username = $data['username'] ?? '';
             $password = $data['password'] ?? '';
-            
+
             if (empty($username) || empty($password)) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Username and password are required']);
                 break;
             }
-            
-            // Check if username already exists
+
             $stmt = $db->prepare('SELECT id FROM users WHERE username = :username');
             $stmt->execute(['username' => $username]);
             if ($stmt->fetch()) {
@@ -136,27 +185,24 @@ try {
                 echo json_encode(['error' => 'Username already exists']);
                 break;
             }
-            
-            // Create new user
+
             $stmt = $db->prepare('INSERT INTO users (username, password) VALUES (:username, :password)');
             try {
                 $stmt->execute([
                     'username' => $username,
-                    'password' => hash('sha256', $password)
+                    'password' => password_hash($password, PASSWORD_BCRYPT),
                 ]);
-                
-                $userId = $db->lastInsertId();
-                $user = [
-                    'id' => $userId,
-                    'username' => $username
-                ];
-                
+
+                $user = ['id' => $db->lastInsertId(), 'username' => $username];
                 $_SESSION['user'] = $user;
-                $_SESSION['nickname'] = $username; // For backward compatibility
-                
+                $_SESSION['nickname'] = $username;
+                $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
                 echo json_encode([
                     'success' => true,
-                    'user' => $user
+                    'user' => $user,
+                    'csrf_token' => $_SESSION['csrf_token'],
+                    'ws_token' => mint_ws_token($username),
                 ]);
             } catch (PDOException $e) {
                 http_response_code(500);
@@ -237,7 +283,8 @@ try {
                 echo json_encode(['error' => 'Method not allowed']);
                 break;
             }
-            
+            require_csrf();
+
             error_log('Received create-room request');
             $data = json_decode(file_get_contents('php://input'), true);
             error_log('Request data: ' . print_r($data, true));
@@ -353,7 +400,8 @@ try {
                 echo json_encode(['error' => 'Method not allowed']);
                 break;
             }
-            
+            require_csrf();
+
             $data = json_decode(file_get_contents('php://input'), true);
             $roomId = isset($data['room_id']) ? filter_var($data['room_id'], FILTER_SANITIZE_NUMBER_INT) : 0;
             $message = '';

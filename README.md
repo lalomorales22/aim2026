@@ -60,11 +60,35 @@ git push -u origin main
 2. Authorize the Railway GitHub app for `lalomorales22/aim2026` (or "All repositories").
 3. Pick `lalomorales22/aim2026`, branch `main`.
 4. *Settings → Networking* → **Generate Domain**. Copy the result (e.g. `web-production-8a622.up.railway.app`).
-5. No env vars needed. Railway sets `PORT` automatically; `server.js` reads it.
-6. Healthcheck is preconfigured in `railway.json` (path `/health`, 30s timeout).
+5. *Settings → Variables* → add **`WS_SECRET`** (see "Setting WS_SECRET" below).
+6. Healthcheck is preconfigured in `railway.json` (path `/health`, 30s timeout). Railway sets `PORT` automatically.
 7. Wait for the build. Log should end with `aim-chat ws server listening on :8080`. Open `https://YOUR-RAILWAY-DOMAIN/health` — expect `{"status":"ok",...}`.
 
 From now on, every push to `main` auto-deploys.
+
+### 2a. Setting `WS_SECRET` (shared HMAC secret)
+
+The PHP frontend mints HMAC-signed auth tokens; the Node WS server verifies them. Both halves need the **same secret**.
+
+1. Generate a strong secret:
+
+   ```bash
+   openssl rand -hex 32
+   ```
+
+2. **Railway** → service → *Variables* → add `WS_SECRET=<that value>`. Railway redeploys.
+3. **Bluehost** → cPanel → *Setup PHP Environment Variables* (or set in `.htaccess` / a small `.user.ini`):
+
+   ```
+   SetEnv WS_SECRET <that value>
+   ```
+
+   Or in `.user.ini`:
+   ```
+   env[WS_SECRET] = "<that value>"
+   ```
+
+Until both sides have it, the system falls back to non-HMAC `".dev"` tokens (still works, but anyone who knows your Railway URL could spoof a connection). Server logs `WS_SECRET not set` on startup if missing.
 
 > **Why `nixpacks.toml` exists.** Nixpacks (Railway's build system) auto-detects the repo's languages. Because this folder contains `index.php` + `backend.php` *and* `server.js`, Nixpacks tries to build a hybrid PHP+nginx+Node image, which fails with `error: undefined variable 'nodejs_24'` in the Nix derivation. The `nixpacks.toml` here forces `providers = ["node"]` and pins Node 22 so the build is Node-only. The `engines: 22.x` in `package.json` reinforces this. Don't remove them.
 
@@ -125,11 +149,16 @@ cPanel can clone the GitHub repo straight into Bluehost and pull updates with on
 - DB changes: happen live on Bluehost via `backend.php`. The local `chatrooms.db` is gitignored and stale by design.
 - Anything that changes the WS protocol needs **matching** edits to `server.js` *and* `script.js`. The protocol is in sync today; keep it that way.
 
+## Security model
+
+- **Passwords:** bcrypt (`PASSWORD_BCRYPT`) on register. Existing SHA-256 hashes are auto-upgraded to bcrypt on the user's next successful login — see `backend.php` `case 'login'`.
+- **CSRF:** every POST to `backend.php` requires the `X-CSRF-Token` header. Token lives in `$_SESSION['csrf_token']`, rotated on auth state change, exposed to JS via `window.CSRF_TOKEN`, and sent automatically by `window.apiPost()` in `script.js`.
+- **WS auth:** `index.php` mints an HMAC-SHA256 token (`payload.sig`, payload is base64url JSON `{nickname, exp}`) using `WS_SECRET`. The client passes it in the WebSocket `identify` message. `server.js` verifies the signature with the same `WS_SECRET` and rejects if invalid, expired, or if the claimed nickname doesn't match the token. Tokens last 24h; if a user idles past that, they need to reload.
+
 ## Known limitations
 
 - **DM history is in-memory** on Railway. It resets on every redeploy/restart. Room messages are unaffected — those persist through `backend.php` → SQLite on Bluehost.
-- **No auth on the WS server.** Whoever connects can claim any nickname. Matches the previous Heroku setup. To lock it down later, mint a short-lived token in `backend.php` after login and verify it in `server.js` during `identify`.
-- **Passwords are stored as bare SHA-256** (no salt, no bcrypt) — see `backend.php`. Fine for a toy, would be a real concern if this ever held meaningful accounts.
+- **WS auth requires `WS_SECRET` on both Bluehost and Railway.** Without it, signed-mode degrades to a `".dev"` fallback that still authenticates "is this PHP that minted it" loosely but not cryptographically. Set the env var on both hosts (see step 2a).
 
 ## Troubleshooting
 
@@ -143,3 +172,5 @@ cPanel can clone the GitHub repo straight into Bluehost and pull updates with on
 | Railway build fails with `error: undefined variable 'nodejs_24'` | `nixpacks.toml` is missing or got reverted. It must contain `providers = ["node"]` and `nixPkgs = ["nodejs_22"]`. Combined with `"engines": { "node": "22.x" }` in `package.json`. |
 | Railway healthcheck times out | Service might be cold-starting or wrong port. Confirm `server.js` listens on `process.env.PORT` (it does) and that `/health` is the configured path in `railway.json`. |
 | `Application not found` on the Railway domain | Domain reserved but no successful deploy yet, or domain attached to a different service. Check Deployments tab + Networking settings. |
+| WS closes immediately with code 1008 / `invalid or expired auth token` | `WS_SECRET` doesn't match between Bluehost and Railway, or the user's token expired (24h). Re-check the env var on both sides; have the user reload. |
+| All POST endpoints return `403 invalid csrf token` | Browser still has an old `script.js` cached (without `apiPost`). Hard-reload, and confirm `window.CSRF_TOKEN` is set in view-source. |

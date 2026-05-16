@@ -10,12 +10,49 @@
  */
 
 const http = require('http');
+const crypto = require('crypto');
 const { WebSocketServer } = require('ws');
 
 const PORT = process.env.PORT || 8080;
 const ACTIVE_USERS_INTERVAL_MS = 15_000;
 const HEARTBEAT_INTERVAL_MS = 30_000;
 const DM_HISTORY_LIMIT = 200;
+const WS_SECRET = process.env.WS_SECRET || null;
+
+if (!WS_SECRET) {
+  console.warn('[ws] WS_SECRET not set — accepting unsigned ".dev" tokens. Set WS_SECRET in Railway to lock this down.');
+}
+
+// Verify HMAC-SHA256 signed tokens minted by index.php / backend.php.
+// Token format: base64url(payload).hex(hmac(payload, WS_SECRET))
+// payload is JSON: { nickname, exp }
+function verifyToken(token) {
+  if (typeof token !== 'string' || !token.includes('.')) return null;
+  const dot = token.lastIndexOf('.');
+  const b64 = token.slice(0, dot);
+  const sig = token.slice(dot + 1);
+
+  let payload;
+  try {
+    const normalized = b64.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+    payload = JSON.parse(Buffer.from(padded, 'base64').toString('utf8'));
+  } catch {
+    return null;
+  }
+  if (!payload || typeof payload.nickname !== 'string' || typeof payload.exp !== 'number') return null;
+  if (payload.exp < Math.floor(Date.now() / 1000)) return null;
+
+  if (WS_SECRET) {
+    const expected = crypto.createHmac('sha256', WS_SECRET).update(b64).digest('hex');
+    const a = Buffer.from(sig, 'hex');
+    const b = Buffer.from(expected, 'hex');
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  } else {
+    if (sig !== 'dev') return null;
+  }
+  return payload;
+}
 
 // nickname is the only identity. Last writer wins on metadata.
 const clients = new Map();      // ws -> { nickname, displayName, status, avatarColor, profile, rooms:Set<roomId>, isAlive }
@@ -100,8 +137,21 @@ wss.on('connection', (ws, req) => {
 
     switch (data.type) {
       case 'identify': {
-        client.nickname = data.nickname;
-        client.displayName = data.displayName || data.nickname;
+        const verified = verifyToken(data.token);
+        if (!verified) {
+          ws.send(JSON.stringify({ type: 'error', message: 'invalid or expired auth token' }));
+          console.log(`[ws] identify rejected (bad token) claim=${data.nickname}`);
+          ws.close(1008, 'unauthorized');
+          break;
+        }
+        if (verified.nickname !== data.nickname) {
+          ws.send(JSON.stringify({ type: 'error', message: 'nickname does not match token' }));
+          console.log(`[ws] identify rejected (mismatch) token=${verified.nickname} claim=${data.nickname}`);
+          ws.close(1008, 'unauthorized');
+          break;
+        }
+        client.nickname = verified.nickname;
+        client.displayName = data.displayName || verified.nickname;
         client.status = data.status || 'online';
         client.avatarColor = data.avatarColor || '#007BFF';
         client.profile = data.profile || {};

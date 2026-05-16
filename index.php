@@ -9,11 +9,28 @@ session_start();
 // ---------------------------------------------------------------------------
 $WS_HOST = getenv('WS_HOST') ?: 'web-production-8a622.up.railway.app';
 
+// CSRF token — one per session, regenerated on auth state change in backend.php.
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrfToken = $_SESSION['csrf_token'];
+
 // Handle logout
 if (isset($_GET['logout'])) {
     session_destroy();
     header('Location: index.php');
     exit;
+}
+
+// Mint a WS auth token for the logged-in user. Verified by server.js using the
+// shared WS_SECRET env var (set on both Bluehost and Railway). Without WS_SECRET
+// the system falls back to a non-HMAC marker so the rollout doesn't break.
+function aim_mint_ws_token($nickname, $ttl = 86400) {
+    $payload = json_encode(['nickname' => $nickname, 'exp' => time() + $ttl]);
+    $b64 = rtrim(strtr(base64_encode($payload), '+/', '-_'), '=');
+    $secret = getenv('WS_SECRET');
+    $sig = $secret ? hash_hmac('sha256', $b64, $secret) : 'dev';
+    return "$b64.$sig";
 }
 
 // Handle nickname selection
@@ -294,14 +311,18 @@ $isLoggedIn = isset($_SESSION['user']);
     <script>
         // WebSocket host for the Railway-hosted realtime server.
         window.WS_HOST = "<?php echo htmlspecialchars($WS_HOST, ENT_QUOTES); ?>";
+        // CSRF token used by apiPost() for all backend POSTs.
+        window.CSRF_TOKEN = "<?php echo htmlspecialchars($csrfToken, ENT_QUOTES); ?>";
     </script>
     <?php if ($isLoggedIn): ?>
     <script>
         // Store user info for WebSocket connection
         const userInfo = {
             nickname: "<?php echo htmlspecialchars($_SESSION['user']['username']); ?>",
-            id: <?php echo $_SESSION['user']['id']; ?>
+            id: <?php echo (int)$_SESSION['user']['id']; ?>
         };
+        // Signed token the Node WS server verifies on `identify`.
+        window.WS_TOKEN = "<?php echo htmlspecialchars(aim_mint_ws_token($_SESSION['user']['username']), ENT_QUOTES); ?>";
     </script>
     <?php endif; ?>
     

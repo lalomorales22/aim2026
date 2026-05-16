@@ -77,16 +77,22 @@ The PHP frontend mints HMAC-signed auth tokens; the Node WS server verifies them
    ```
 
 2. **Railway** → service → *Variables* → add `WS_SECRET=<that value>`. Railway redeploys.
-3. **Bluehost** → cPanel → *Setup PHP Environment Variables* (or set in `.htaccess` / a small `.user.ini`):
+3. **Bluehost** — needs two files in `public_html/`, both gitignored so the secret never lands in source control:
 
-   ```
-   SetEnv WS_SECRET <that value>
+   `.user.ini`:
+   ```ini
+   auto_prepend_file = ".aim-env.php"
    ```
 
-   Or in `.user.ini`:
+   `.aim-env.php`:
+   ```php
+   <?php
+   putenv('WS_SECRET=<that value>');
    ```
-   env[WS_SECRET] = "<that value>"
-   ```
+
+   `.aim-env.example.php` in this repo is a template you can copy. **Why this pattern instead of `env[WS_SECRET]=...` in `.user.ini`?** That syntax is silently ignored by PHP — `env` is `PHP_INI_SYSTEM` scope and only takes effect in the master `php.ini`. `auto_prepend_file` is `PHP_INI_PERDIR` scope, so it *does* work in `.user.ini`, and the prepended PHP file can call `putenv()` to expose the secret.
+
+   `.user.ini` changes are cached up to 5 minutes (`user_ini.cache_ttl`). After uploading, wait a few minutes or touch each PHP file to force a re-read.
 
 Until both sides have it, the system falls back to non-HMAC `".dev"` tokens (still works, but anyone who knows your Railway URL could spoof a connection). Server logs `WS_SECRET not set` on startup if missing.
 

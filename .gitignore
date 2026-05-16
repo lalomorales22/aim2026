@@ -4,6 +4,10 @@ npm-debug.log*
 .env.*
 .DS_Store
 
+# Secrets — never commit these. Live only on the Bluehost server.
+.user.ini
+.aim-env.php
+
 # Bluehost runtime artifacts you don't want in source control
 error_log
 chatrooms.db

@@ -309,7 +309,11 @@ try {
                 $response = [
                     'success' => true,
                     'room' => [
-                        'id' => $roomId,
+                        // lastInsertId() returns a string; cast to int so it
+                        // matches the type the rooms-list endpoint returns
+                        // (SELECT). Mismatched types put clients in different
+                        // server-side room buckets and break message fan-out.
+                        'id' => (int)$roomId,
                         'name' => $roomName,
                         'created_at' => date('Y-m-d H:i:s')
                     ]

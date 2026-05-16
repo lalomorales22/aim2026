@@ -61,9 +61,16 @@ const dmHistory = new Map();    // "alice|bob" (sorted) -> [{ from, to, message,
 
 const dmKey = (a, b) => [a, b].sort().join('|');
 
+// Coerce roomId to a string so clients that send 5 (number) and "5" (string)
+// land in the same room bucket. lastInsertId() in PHP returns a string while
+// SELECT id returns an int; without normalization those become separate keys.
+const roomKey = (r) => (r == null ? null : String(r));
+
 function members(roomId) {
-  let set = roomMembers.get(roomId);
-  if (!set) { set = new Set(); roomMembers.set(roomId, set); }
+  const key = roomKey(roomId);
+  if (key == null) return new Set();
+  let set = roomMembers.get(key);
+  if (!set) { set = new Set(); roomMembers.set(key, set); }
   return set;
 }
 
@@ -171,7 +178,7 @@ wss.on('connection', (ws, req) => {
       }
 
       case 'join': {
-        const { roomId } = data;
+        const roomId = roomKey(data.roomId);
         if (!roomId) break;
         if (data.nickname) client.nickname = data.nickname;
         members(roomId).add(ws);
@@ -186,7 +193,8 @@ wss.on('connection', (ws, req) => {
       }
 
       case 'message': {
-        const { roomId, message } = data;
+        const roomId = roomKey(data.roomId);
+        const { message } = data;
         if (!roomId || !message) break;
         broadcastToRoom(roomId, {
           type: 'message',
@@ -199,7 +207,7 @@ wss.on('connection', (ws, req) => {
       }
 
       case 'typing': {
-        const { roomId } = data;
+        const roomId = roomKey(data.roomId);
         if (!roomId) break;
         broadcastToRoom(roomId, {
           type: 'typing',

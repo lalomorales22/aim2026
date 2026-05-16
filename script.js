@@ -10,6 +10,26 @@ window.apiPost = function (endpoint, payload) {
     });
 };
 
+// Sound effects. opts.force=true plays even when the user disabled sounds
+// (used for the "you've got mail" login chime and the "goodbye" send-off,
+// where the sound is part of the UX, not a notification).
+window.playSound = function (id, opts) {
+    opts = opts || {};
+    try {
+        // getUserProfile is defined later; guard for the splash screen, which
+        // runs before the desktop is initialized and before profile exists.
+        if (!opts.force && typeof getUserProfile === 'function') {
+            const profile = getUserProfile();
+            if (profile && profile.soundEnabled === false) return Promise.resolve();
+        }
+    } catch (_) { /* fall through */ }
+    const el = document.getElementById(id);
+    if (!el) return Promise.resolve();
+    try { el.currentTime = 0; } catch (_) {}
+    const p = el.play();
+    return p && typeof p.catch === 'function' ? p.catch(() => {}) : Promise.resolve();
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     // Set up resize end handler for resizable windows (desktop only)
     if (window.innerWidth >= 1025) {
@@ -42,7 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 loginWindow.style.display = 'block';
                 
                 // Play startup sound
-                document.getElementById('startup-sound').play().catch(e => console.log('Auto-play prevented:', e));
+                // "You've got mail" splash chime. force=true: this is an
+                // intentional UX moment, not a notification.
+                playSound('startup-sound', { force: true });
             }, 2000); // Show second image for 2 seconds
         }, 1000); // Show first image for 1 second
         
@@ -117,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (!username || !password) {
                 loginError.textContent = 'Please enter both username and password';
-                document.getElementById('error-sound').play().catch(e => console.log('Sound play prevented:', e));
+                playSound('error-sound');
                 return;
             }
             
@@ -133,13 +155,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.reload();
                 } else {
                     loginError.textContent = data.error || 'Invalid username or password';
-                    document.getElementById('error-sound').play().catch(e => console.log('Sound play prevented:', e));
+                    playSound('error-sound');
                 }
             })
             .catch(error => {
                 console.error('Login error:', error);
                 loginError.textContent = 'An error occurred. Please try again.';
-                document.getElementById('error-sound').play().catch(e => console.log('Sound play prevented:', e));
+                playSound('error-sound');
             })
             .finally(() => {
                 // Reset button state
@@ -161,28 +183,28 @@ document.addEventListener('DOMContentLoaded', () => {
             // Validate all fields
             if (!username || !password || !confirmPassword) {
                 registerError.textContent = 'Please fill in all fields';
-                document.getElementById('error-sound').play().catch(e => console.log('Sound play prevented:', e));
+                playSound('error-sound');
                 return;
             }
             
             // Username validation
             if (username.length < 3) {
                 registerError.textContent = 'Username must be at least 3 characters';
-                document.getElementById('error-sound').play().catch(e => console.log('Sound play prevented:', e));
+                playSound('error-sound');
                 return;
             }
             
             // Password validation
             if (password.length < 6) {
                 registerError.textContent = 'Password must be at least 6 characters';
-                document.getElementById('error-sound').play().catch(e => console.log('Sound play prevented:', e));
+                playSound('error-sound');
                 return;
             }
             
             // Password matching
             if (password !== confirmPassword) {
                 registerError.textContent = 'Passwords do not match';
-                document.getElementById('error-sound').play().catch(e => console.log('Sound play prevented:', e));
+                playSound('error-sound');
                 return;
             }
             
@@ -198,13 +220,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.reload();
                 } else {
                     registerError.textContent = data.error || 'Failed to create account';
-                    document.getElementById('error-sound').play().catch(e => console.log('Sound play prevented:', e));
+                    playSound('error-sound');
                 }
             })
             .catch(error => {
                 console.error('Registration error:', error);
                 registerError.textContent = 'An error occurred. Please try again.';
-                document.getElementById('error-sound').play().catch(e => console.log('Sound play prevented:', e));
+                playSound('error-sound');
             })
             .finally(() => {
                 // Reset button state
@@ -241,11 +263,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const window = e.target.closest('.window');
             if (window) {
                 window.style.display = 'none';
+                // AIM '95 closing-window chime.
+                playSound('drop-sound');
                 const taskbarItem = document.querySelector(`.taskbar-item[data-window="${window.id}"]`);
                 if (taskbarItem) {
                     taskbarItem.remove();
                 }
-                
+
                 // If it's a chat window, update active rooms count
                 if (window.classList.contains('chat-window') && window.id !== 'chat-window-template') {
                     updateActiveRoomsCount();
@@ -359,7 +383,7 @@ function createStartMenu() {
     });
     
     document.getElementById('start-menu-logout').addEventListener('click', () => {
-        window.location.href = '?logout=1';
+        signOff();
     });
 }
 
@@ -936,7 +960,7 @@ function handleIncomingDirectMessage(data) {
         // Play sound notification
         const profile = getUserProfile();
         if (profile.soundEnabled) {
-            document.getElementById('chat-sound').play().catch(e => console.log('Sound play prevented:', e));
+            playSound('chat-sound');
         }
     } else {
         console.error('Failed to create or find DM window for:', from);
@@ -1151,12 +1175,20 @@ function initializeDesktop() {
     const logoutIcon = document.getElementById('logout-icon');
     if (logoutIcon) {
         logoutIcon.addEventListener('click', () => {
-            window.location.href = '?logout=1';
+            signOff();
         });
     }
-    
+
     // Connect to WebSocket for real-time updates
     connectToWebSocket();
+}
+
+// Play the AIM '95 sign-off chime, then navigate to logout. force=true so
+// the sound plays even if the user disabled sound notifications — it's a
+// short, intentional UX moment, not a passive notification.
+function signOff() {
+    playSound('goodbye-sound', { force: true });
+    setTimeout(() => { window.location.href = '?logout=1'; }, 700);
 }
 
 function showWindow(windowId) {
@@ -1240,7 +1272,7 @@ function loadChatrooms() {
             roomList.innerHTML = '<div class="loading">Error loading chatrooms. Please try again.</div>';
             
             // Play error sound
-            document.getElementById('error-sound').play().catch(e => console.log('Sound play prevented:', e));
+            playSound('error-sound');
         });
 }
 
@@ -1281,7 +1313,7 @@ function createNewRoom() {
             alert(data.error || 'Could not create room');
             
             // Play error sound
-            document.getElementById('error-sound').play().catch(e => console.log('Sound play prevented:', e));
+            playSound('error-sound');
         }
     })
     .catch(error => {
@@ -1289,7 +1321,7 @@ function createNewRoom() {
         alert('Error creating room. Please try again.');
         
         // Play error sound
-        document.getElementById('error-sound').play().catch(e => console.log('Sound play prevented:', e));
+        playSound('error-sound');
     });
 }
 
@@ -1489,7 +1521,7 @@ function loadChatMessages(roomId, oldestTimestamp = null) {
                 }
                 
                 // Play error sound
-                document.getElementById('error-sound').play().catch(e => console.log('Sound play prevented:', e));
+                playSound('error-sound');
             }
         })
         .catch(error => {
@@ -1499,7 +1531,7 @@ function loadChatMessages(roomId, oldestTimestamp = null) {
             }
             
             // Play error sound
-            document.getElementById('error-sound').play().catch(e => console.log('Sound play prevented:', e));
+            playSound('error-sound');
         });
 }
 
@@ -1553,7 +1585,7 @@ function addChatMessage(roomId, nickname, message, timestamp) {
         // Check profile settings before playing sound
         const profile = getUserProfile();
         if (profile.soundEnabled) {
-            document.getElementById('chat-sound').play().catch(e => console.log('Sound play prevented:', e));
+            playSound('chat-sound');
         }
     }
 }
@@ -1615,6 +1647,9 @@ function updateTypingIndicator(roomId, nickname, isTyping) {
 let socket = null;
 let reconnectAttempts = 0;
 const maxReconnectAttempts = 5;
+// Last roster we got from the server; used to diff for buddyin/buddyout
+// chimes. null means "no roster yet" — first update is treated as baseline.
+let rosterSnapshot = null;
 
 function connectToWebSocket() {
     // Check if WebSocket is supported
@@ -1679,6 +1714,28 @@ function connectToWebSocket() {
                 break;
                 
             case 'active_users':
+                // Diff roster against the previous snapshot for buddyin/out
+                // chimes. Skip the very first update so the user doesn't get
+                // a barrage of pings for everyone already online at connect.
+                {
+                    const current = new Set((data.users || []).map(u => u.nickname));
+                    if (rosterSnapshot !== null) {
+                        for (const nick of current) {
+                            if (!rosterSnapshot.has(nick) && nick !== userInfo.nickname) {
+                                playSound('buddyin-sound');
+                                break; // one chime per update is plenty
+                            }
+                        }
+                        for (const nick of rosterSnapshot) {
+                            if (!current.has(nick) && nick !== userInfo.nickname) {
+                                playSound('buddyout-sound');
+                                break;
+                            }
+                        }
+                    }
+                    rosterSnapshot = current;
+                }
+
                 updateActiveUsersList(data.users);
                 // Update the counter in the desktop icon
                 const userCount = document.querySelector('#active-users-icon .user-count');
@@ -1716,15 +1773,25 @@ function connectToWebSocket() {
                 // Play error sound
                 const profile = getUserProfile();
                 if (profile.soundEnabled) {
-                    document.getElementById('error-sound').play().catch(e => console.log('Sound play prevented:', e));
+                    playSound('error-sound');
                 }
                 break;
         }
     };
     
     socket.onclose = function(event) {
-        console.log('WebSocket connection closed');
-        
+        console.log('WebSocket connection closed', event.code, event.reason);
+        // Drop the roster snapshot so reconnects don't false-fire buddyout.
+        rosterSnapshot = null;
+
+        // 1008 = policy violation. Server uses this for bad/expired tokens.
+        // Silently reconnecting would just loop, so tell the user instead.
+        if (event.code === 1008) {
+            playSound('error-sound');
+            alert('Your session expired or the chat server rejected the token.\nPlease log out and back in.');
+            return;
+        }
+
         // If it wasn't a clean close, attempt to reconnect
         if (!event.wasClean && reconnectAttempts < maxReconnectAttempts) {
             reconnectAttempts++;
@@ -1751,7 +1818,7 @@ function connectToWebSocket() {
                 alert(data.error || 'Failed to send message');
                 
                 // Play error sound
-                document.getElementById('error-sound').play().catch(e => console.log('Sound play prevented:', e));
+                playSound('error-sound');
             }
         })
         .catch(error => {
@@ -1759,7 +1826,7 @@ function connectToWebSocket() {
             alert('Error sending message. Please try again.');
             
             // Play error sound
-            document.getElementById('error-sound').play().catch(e => console.log('Sound play prevented:', e));
+            playSound('error-sound');
         });
     };
 }

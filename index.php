@@ -1,4 +1,12 @@
 <?php
+// Load WS_SECRET (and any other env vars) before anything reads them.
+// .user.ini + auto_prepend_file works on most Bluehost accounts but is brittle
+// (5-minute INI cache, can be disabled by host policy), so include it
+// explicitly here too — getenv() is cheap and idempotent.
+if (is_readable(__DIR__ . '/.aim-env.php')) {
+    require_once __DIR__ . '/.aim-env.php';
+}
+
 session_start();
 
 // ---------------------------------------------------------------------------
@@ -297,16 +305,16 @@ $isLoggedIn = isset($_SESSION['user']);
         <?php endif; ?>
     </div>
     
-    <!-- System sounds -->
-    <audio id="startup-sound" preload="auto">
-        <source src="sounds/startup.wav" type="audio/wav">
-    </audio>
-    <audio id="error-sound" preload="auto">
-        <source src="sounds/error.wav" type="audio/wav">
-    </audio>
-    <audio id="chat-sound" preload="auto">
-        <source src="sounds/chat.wav" type="audio/wav">
-    </audio>
+    <!-- System sounds (AOL / AIM '95-era .wav files in /sounds) -->
+    <audio id="startup-sound"  preload="auto"><source src="sounds/gotmail.wav"  type="audio/wav"></audio>
+    <audio id="error-sound"    preload="auto"><source src="sounds/error.wav"    type="audio/wav"></audio>
+    <audio id="chat-sound"     preload="auto"><source src="sounds/chat.wav"     type="audio/wav"></audio>
+    <audio id="gotmail-sound"  preload="auto"><source src="sounds/gotmail.wav"  type="audio/wav"></audio>
+    <audio id="goodbye-sound"  preload="auto"><source src="sounds/goodbye.wav"  type="audio/wav"></audio>
+    <audio id="drop-sound"     preload="auto"><source src="sounds/drop.wav"     type="audio/wav"></audio>
+    <audio id="buddyin-sound"  preload="auto"><source src="sounds/buddyin.wav"  type="audio/wav"></audio>
+    <audio id="buddyout-sound" preload="auto"><source src="sounds/buddyout.wav" type="audio/wav"></audio>
+    <audio id="filedone-sound" preload="auto"><source src="sounds/filedone.wav" type="audio/wav"></audio>
     
     <script>
         // WebSocket host for the Railway-hosted realtime server.

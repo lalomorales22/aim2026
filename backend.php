@@ -1,4 +1,10 @@
 <?php
+// Load WS_SECRET (and any other env vars) before mint_ws_token() runs.
+// Mirrors the include in index.php so we don't rely on .user.ini alone.
+if (is_readable(__DIR__ . '/.aim-env.php')) {
+    require_once __DIR__ . '/.aim-env.php';
+}
+
 session_start();
 header('Content-Type: application/json');
 

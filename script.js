@@ -352,7 +352,7 @@ function createStartMenu() {
             </div>
             <div class="start-menu-item" id="start-menu-active-now">
                 <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwQAADsEBuJFr7QAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC4xOdTWsmQAAAFSSURBVDhPnZLNSsNAFIVnZm6SmSRtkm5EEcSFWkEQXLjwNdQn8DkU3VfBnSCIC8GNCxeuXRVBKKKIiFZtkyat+TNJxnOaNG1pxYFvce+ZM9+9ZAbYp/v9/iHCQ7/fX6EopUc0TRMQF4qinI1Go+vpdLqE1TTNE0mSIsQKJpOJul3gARcIz6IoamzbXsQh7vZ6vQWu2+22MHl1OBxeMorL5SIxDENH2IhEUbzFhf54PD7BOh6PHWSakiRth8Ph6XQ65XieDwghQbvdPkbo8H1/icEiM9Mqw7JsBFO34Ac3ENSz2eyD4zgO7yHBcDi8xv8TQRCCoSgsA7fbXSgMY5qmj9ioIQhCHoYhyLJ8kWXZR5ZlkKYp/nzgOM4Vz/NZnucQx3FZoEJV1Y5lWRs07BqGUWPaLtA0TcTXF8jyfd/HfpFXZpXL5R5FUbxRVXUrB3+H/U5rgB8J0JfwJCDJaQAAAABJRU5ErkJggg==">
-                <span>Active Now</span>
+                <span>Buddy List</span>
             </div>
             <div class="start-menu-divider"></div>
             <div class="start-menu-item" id="start-menu-logout">
@@ -677,7 +677,7 @@ function showActiveNowWindow() {
         
         activeNowWindow.innerHTML = `
             <div class="window-header">
-                <div class="window-title">Active Now</div>
+                <div class="window-title">Buddy List</div>
                 <div class="window-controls">
                     <button class="control-button minimize">-</button>
                     <button class="control-button maximize">□</button>
@@ -690,7 +690,7 @@ function showActiveNowWindow() {
                     <span class="auto-refresh-status">Auto-refresh: ON</span>
                 </div>
                 <div class="active-users-list" id="active-users-list">
-                    <div class="loading">Loading active users...</div>
+                    <div class="loading">Loading buddy list...</div>
                 </div>
             </div>
         `;
@@ -741,8 +741,8 @@ function fetchActiveUsers() {
     }
     
     // Only show loading state on first load, not during refreshes
-    if (activeUsersList.innerHTML === '' || activeUsersList.innerHTML.includes('Loading active users')) {
-        activeUsersList.innerHTML = '<div class="loading">Loading active users...</div>';
+    if (activeUsersList.innerHTML === '' || activeUsersList.innerHTML.includes('Loading buddy list')) {
+        activeUsersList.innerHTML = '<div class="loading">Loading buddy list...</div>';
     }
     
     // Fetch active users from the server
@@ -797,12 +797,12 @@ function fetchActiveUsers() {
                 }
             } else {
                 console.error('Failed to load active users:', data.error);
-                activeUsersList.innerHTML = '<div class="loading error">Failed to load active users</div>';
+                activeUsersList.innerHTML = '<div class="loading error">Failed to load buddy list</div>';
             }
         })
         .catch(error => {
             console.error('Error fetching active users:', error);
-            activeUsersList.innerHTML = '<div class="loading error">Failed to load active users</div>';
+            activeUsersList.innerHTML = '<div class="loading error">Failed to load buddy list</div>';
         });
 }
 
@@ -815,7 +815,7 @@ function updateActiveUsersList(users) {
     }
     
     if (!users || users.length === 0) {
-        activeUsersList.innerHTML = '<div class="loading">No active users</div>';
+        activeUsersList.innerHTML = '<div class="loading">No buddies online</div>';
         return;
     }
     

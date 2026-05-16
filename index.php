@@ -206,9 +206,9 @@ $isLoggedIn = isset($_SESSION['user']);
                 </div>
 
                 <div class="desktop-icon" id="active-users-icon">
-                    <img src="images/active-users-icon.png" alt="Active Users">
+                    <img src="images/active-users-icon.png" alt="Buddy List">
                     <span class="user-count">0</span>
-                    <span>Active Users</span>
+                    <span>Buddy List</span>
                 </div>
 
                 <div class="desktop-icon" id="logout-icon">
@@ -260,10 +260,10 @@ $isLoggedIn = isset($_SESSION['user']);
                 </div>
             </div>
 
-            <!-- Active Users Window -->
+            <!-- Buddy List Window (static — see also the JS-created #active-now-window) -->
             <div class="window" id="active-users-window" style="display: none;">
                 <div class="window-header">
-                    <div class="window-title">Active Users</div>
+                    <div class="window-title">Buddy List</div>
                     <div class="window-controls">
                         <button class="control-button minimize">-</button>
                         <button class="control-button maximize">□</button>
@@ -275,7 +275,7 @@ $isLoggedIn = isset($_SESSION['user']);
                         <button class="win95-button" id="refresh-users-btn">Refresh</button>
                     </div>
                     <div class="active-users-list" id="active-users-list">
-                        <div class="loading">Loading active users...</div>
+                        <div class="loading">Loading buddy list...</div>
                     </div>
                 </div>
             </div>

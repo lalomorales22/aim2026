@@ -13,3 +13,6 @@ error_log
 chatrooms.db
 *.db-journal
 .htaccess.no_htaccess.phpupgrader
+
+# One-shot maintenance scripts — keep local, never commit.
+cleanup.php

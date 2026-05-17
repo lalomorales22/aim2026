@@ -462,9 +462,9 @@ function showProfileWindow() {
         profileWindow = document.createElement('div');
         profileWindow.id = 'profile-window';
         profileWindow.className = 'window';
-        profileWindow.style.width = '400px';
-        profileWindow.style.height = '450px';
-        profileWindow.style.top = '100px';
+        profileWindow.style.width = '440px';
+        profileWindow.style.height = '580px';
+        profileWindow.style.top = '60px';
         profileWindow.style.left = '150px';
         
         // Load user profile data from localStorage or use defaults
@@ -2336,13 +2336,22 @@ function makeWindowsDraggable() {
         let currentY;
         let initialX;
         let initialY;
-        
+
         // Store original dimensions for resizable windows (desktop view)
         if (window.offsetWidth > 0 && window.offsetHeight > 0) {
             window.dataset.originalWidth = window.style.width || `${window.offsetWidth}px`;
             window.dataset.originalHeight = window.style.height || `${window.offsetHeight}px`;
         }
-        
+
+        // Click-to-focus: any mousedown inside this window raises it to the
+        // top. Idempotent re-attach guard so makeWindowsDraggable() can be
+        // called more than once without stacking duplicate listeners.
+        if (!window.dataset.focusBound) {
+            window.addEventListener('mousedown', () => bringToFront(window), true);
+            window.addEventListener('touchstart', () => bringToFront(window), { capture: true, passive: true });
+            window.dataset.focusBound = '1';
+        }
+
         header.addEventListener('mousedown', startDragging);
         document.addEventListener('mousemove', drag);
         document.addEventListener('mouseup', stopDragging);

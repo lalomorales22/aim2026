@@ -732,8 +732,8 @@ body {
 #chatrooms-window {
     top: 50px;
     left: 50px;
-    width: 400px;
-    height: 400px;
+    width: 540px;
+    height: 500px;
 }
 
 .toolbar {

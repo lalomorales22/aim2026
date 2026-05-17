@@ -130,18 +130,27 @@ try {
         }
     }
     
-    // Ensure the admin account exists. Idempotent: skips when present.
-    // The bootstrap password comes from ADMIN_PASSWORD (set in .aim-env.php)
-    // — never hard-coded here so the public repo stays clean.
-    $adminCheck = $db->prepare('SELECT id FROM users WHERE username = :u');
-    $adminCheck->execute(['u' => ADMIN_USERNAME]);
-    if (!$adminCheck->fetch()) {
-        $adminPw = getenv('ADMIN_PASSWORD');
-        if ($adminPw) {
+    // Ensure the admin account exists AND its password matches the value
+    // configured in .aim-env.php. If the row was pre-existing with a stale
+    // password, this resets it to the current ADMIN_PASSWORD. Skipped
+    // entirely when ADMIN_PASSWORD is unset (no .aim-env.php yet, etc).
+    $adminPw = getenv('ADMIN_PASSWORD');
+    if ($adminPw) {
+        $adminCheck = $db->prepare('SELECT id, password FROM users WHERE username = :u');
+        $adminCheck->execute(['u' => ADMIN_USERNAME]);
+        $adminRow = $adminCheck->fetch(PDO::FETCH_ASSOC);
+
+        if (!$adminRow) {
             $insertAdmin = $db->prepare('INSERT INTO users (username, password) VALUES (:u, :p)');
             $insertAdmin->execute([
                 'u' => ADMIN_USERNAME,
                 'p' => password_hash($adminPw, PASSWORD_BCRYPT),
+            ]);
+        } elseif (!password_verify($adminPw, $adminRow['password'])) {
+            $updateAdmin = $db->prepare('UPDATE users SET password = :p WHERE id = :id');
+            $updateAdmin->execute([
+                'p'  => password_hash($adminPw, PASSWORD_BCRYPT),
+                'id' => $adminRow['id'],
             ]);
         }
     }

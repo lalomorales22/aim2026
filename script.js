@@ -743,6 +743,10 @@ function showActiveNowWindow() {
                     <span class="buddy-toolbar-spacer"></span>
                     <button class="win95-button refresh-users-btn icon-only" type="button" title="Refresh now">&#x21bb;</button>
                 </div>
+                <div class="buddy-stats" id="buddy-stats">
+                    <span class="buddy-stats-chip" id="buddy-stats-buddies">★ 0 Buddies</span>
+                    <span class="buddy-stats-chip" id="buddy-stats-active">● 0 Active</span>
+                </div>
                 <div class="active-users-list" id="active-users-list">
                     <div class="loading">Loading buddy list&hellip;</div>
                 </div>
@@ -1192,13 +1196,23 @@ function updateActiveUsersList(users) {
     );
 
     // Build section headers inline so users get the classic AIM "Buddies / Online" split.
+    // "Active Users" is the prominent section showing everyone currently online
+    // who isn't already on your buddy list — quick to scan and easy to add.
     const html = [];
     let lastSection = null;
+    const onlineBuddyCount = buddyRows.length;
+    const totalBuddyCount = onlineBuddyCount + offlineBuddyRows.length;
     const sectionLabel = {
-        buddies: `★ Buddies (${buddyRows.length + offlineBuddyRows.length})`,
-        online:  `Online (${onlineRows.length})`,
+        buddies: `★ Buddies <span class="buddy-section-count">${onlineBuddyCount} online · ${totalBuddyCount} total</span>`,
+        online:  `● Active Users <span class="buddy-section-count">${onlineRows.length} online</span>`,
         me:      'You'
     };
+
+    // Update the top-of-window stats chips. Buddies = total saved; Active = everyone online (including you).
+    const buddyCountEl = document.getElementById('buddy-stats-buddies');
+    const activeCountEl = document.getElementById('buddy-stats-active');
+    if (buddyCountEl) buddyCountEl.textContent = `★ ${onlineBuddyCount}/${totalBuddyCount} Buddies`;
+    if (activeCountEl) activeCountEl.textContent = `● ${users.length} Active`;
 
     sorted.forEach(user => {
         // Emit a section header when the section changes.

@@ -61,61 +61,30 @@ $isLoggedIn = isset($_SESSION['user']);
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#008080">
-    <meta name="description" content="AOL Chatrooms '95 - A retro-style chat application">
+    <meta name="description" content="AIM Chat - A retro-style instant messenger">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="AOL Chat '95">
-    <meta name="application-name" content="AOL Chat '95">
+    <meta name="apple-mobile-web-app-title" content="AIM Chat">
+    <meta name="application-name" content="AIM Chat">
     <link rel="manifest" href="manifest.json">
-    <title>AOL Chatrooms '95</title>
+    <title>AIM Chat</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .splash-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        
-        .splash-screen img {
-            max-width: 90%;
-            max-height: 90%;
-            object-fit: contain;
-        }
-        
-        .login-form {
-            display: none;
-        }
-        
-        .login-form.active {
-            display: block;
-        }
-        
-        .register-form {
-            display: none;
-        }
-        
-        .register-form.active {
-            display: block;
-        }
-        
-        .form-error {
-            color: red;
-            margin-top: 10px;
-            font-weight: bold;
-        }
+        /* Form-state visibility (login vs register) is controlled via JS toggling .active. */
+        .login-form,
+        .register-form { display: none; }
+        .login-form.active,
+        .register-form.active { display: block; }
     </style>
 </head>
 <body>
     <?php if (!$isLoggedIn): ?>
-    <!-- Splash Screen -->
-    <div class="splash-screen" id="splash-screen">
-        <img src="images/login1.png" alt="Connecting" id="splash-image">
+    <!-- Sign-on splash — hidden until the user submits the sign-in form;
+         JS triggers the signon1→2→3 dial-up sequence then reloads. -->
+    <div class="splash-screen" id="splash-screen" style="display: none;">
+        <div class="splash-frame">
+            <img src="images/signon1.png" alt="Connecting" id="splash-image">
+            <div class="splash-caption" id="splash-caption">Dialing&hellip;</div>
+        </div>
     </div>
     <?php endif; ?>
     
@@ -138,9 +107,9 @@ $isLoggedIn = isset($_SESSION['user']);
         </div>
         
         <?php if (!$isLoggedIn): ?>
-            <div class="window login-window" id="login-window" style="display: none;">
+            <div class="window login-window" id="login-window">
                 <div class="window-header">
-                    <div class="window-title">AOL Chatrooms '95 - Login</div>
+                    <div class="window-title">AIM Chat &mdash; Sign On</div>
                     <div class="window-controls">
                         <button class="control-button minimize">-</button>
                         <button class="control-button maximize">□</button>
@@ -153,7 +122,7 @@ $isLoggedIn = isset($_SESSION['user']);
                         
                         <!-- Login Form -->
                         <div class="login-form active" id="login-form">
-                            <h2>Welcome to AOL Chatrooms '95</h2>
+                            <h2>Welcome to AIM Chat</h2>
                             <div class="form-group">
                                 <label for="username">Username:</label>
                                 <input type="text" id="username" name="username" required>
@@ -220,7 +189,7 @@ $isLoggedIn = isset($_SESSION['user']);
             <!-- Chatrooms Window -->
             <div class="window" id="chatrooms-window" style="display: none;">
                 <div class="window-header">
-                    <div class="window-title">AOL Chatrooms '95</div>
+                    <div class="window-title">AIM Chat &mdash; Chatrooms</div>
                     <div class="window-controls">
                         <button class="control-button minimize">-</button>
                         <button class="control-button maximize">□</button>
@@ -306,15 +275,16 @@ $isLoggedIn = isset($_SESSION['user']);
     </div>
     
     <!-- System sounds (AOL / AIM '95-era .wav files in /sounds) -->
-    <audio id="startup-sound"  preload="auto"><source src="sounds/gotmail.wav"  type="audio/wav"></audio>
-    <audio id="error-sound"    preload="auto"><source src="sounds/error.wav"    type="audio/wav"></audio>
-    <audio id="chat-sound"     preload="auto"><source src="sounds/chat.wav"     type="audio/wav"></audio>
-    <audio id="gotmail-sound"  preload="auto"><source src="sounds/gotmail.wav"  type="audio/wav"></audio>
-    <audio id="goodbye-sound"  preload="auto"><source src="sounds/goodbye.wav"  type="audio/wav"></audio>
-    <audio id="drop-sound"     preload="auto"><source src="sounds/drop.wav"     type="audio/wav"></audio>
-    <audio id="buddyin-sound"  preload="auto"><source src="sounds/buddyin.wav"  type="audio/wav"></audio>
-    <audio id="buddyout-sound" preload="auto"><source src="sounds/buddyout.wav" type="audio/wav"></audio>
-    <audio id="filedone-sound" preload="auto"><source src="sounds/filedone.wav" type="audio/wav"></audio>
+    <audio id="connecting-sound" preload="auto"><source src="sounds/connecting.wav" type="audio/wav"></audio>
+    <audio id="startup-sound"    preload="auto"><source src="sounds/startup.wav"    type="audio/wav"></audio>
+    <audio id="error-sound"      preload="auto"><source src="sounds/error.wav"      type="audio/wav"></audio>
+    <audio id="chat-sound"       preload="auto"><source src="sounds/chat.wav"       type="audio/wav"></audio>
+    <audio id="gotmail-sound"    preload="auto"><source src="sounds/gotmail.wav"    type="audio/wav"></audio>
+    <audio id="goodbye-sound"    preload="auto"><source src="sounds/goodbye.wav"    type="audio/wav"></audio>
+    <audio id="drop-sound"       preload="auto"><source src="sounds/drop.wav"       type="audio/wav"></audio>
+    <audio id="buddyin-sound"    preload="auto"><source src="sounds/buddyin.wav"    type="audio/wav"></audio>
+    <audio id="buddyout-sound"   preload="auto"><source src="sounds/buddyout.wav"   type="audio/wav"></audio>
+    <audio id="filedone-sound"   preload="auto"><source src="sounds/filedone.wav"   type="audio/wav"></audio>
     
     <script>
         // WebSocket host for the Railway-hosted realtime server.

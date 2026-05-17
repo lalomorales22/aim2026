@@ -46,27 +46,70 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Handle splash screen if not logged in
+    // Login flow:
+    //   1. Sign-on form shows immediately (no splash on page load).
+    //   2. User submits → we play the dial-up splash (signon1→2→3 + modem)
+    //      as a transition, then reload into the logged-in desktop.
+    //   3. Desktop initializeDesktop() plays the welcome chime (startup.wav).
+    //
+    // playSignOnSplash(onComplete) runs the splash sequence in place and
+    // calls onComplete when the modem fade finishes. Defined on window so the
+    // login + register button handlers below can both call it.
     const splashScreen = document.getElementById('splash-screen');
     if (splashScreen) {
-        const splashImage = document.getElementById('splash-image');
-        const loginWindow = document.getElementById('login-window');
-        
-        // Play dial-up sequence
-        setTimeout(() => {
-            splashImage.src = 'images/login2.png';
-            
+        window.playSignOnSplash = function (onComplete) {
+            const splash = document.getElementById('splash-screen');
+            const splashImage = document.getElementById('splash-image');
+            const splashCaption = document.getElementById('splash-caption');
+            const loginWindow = document.getElementById('login-window');
+            if (!splash) { if (onComplete) onComplete(); return; }
+
+            // Hide the login form so the splash takes over the screen.
+            if (loginWindow) loginWindow.style.display = 'none';
+            splash.classList.remove('fade-out');
+            splash.style.display = 'flex';
+
+            // Dial-up modem soundtrack — force=true: this is the UX, not a
+            // notification, so respect the moment even if sounds are off.
+            playSound('connecting-sound', { force: true });
+
+            const FRAME_MS = 750;
+            const frames = [
+                { src: 'images/signon1.png', caption: 'Dialing&hellip;' },
+                { src: 'images/signon2.png', caption: 'Connecting&hellip;' },
+                { src: 'images/signon3.png', caption: 'Welcome to AIM Chat' }
+            ];
+            const stepTo = (i) => {
+                const f = frames[i];
+                if (splashImage) {
+                    splashImage.src = f.src;
+                    splashImage.alt = f.caption.replace(/&hellip;/g, '…');
+                }
+                if (splashCaption) splashCaption.innerHTML = f.caption;
+            };
+
+            stepTo(0);
+            setTimeout(() => stepTo(1), FRAME_MS);
+            setTimeout(() => stepTo(2), FRAME_MS * 2);
+
             setTimeout(() => {
-                // Hide splash screen and show login window
-                splashScreen.style.display = 'none';
-                loginWindow.style.display = 'block';
-                
-                // Play startup sound
-                // "You've got mail" splash chime. force=true: this is an
-                // intentional UX moment, not a notification.
-                playSound('startup-sound', { force: true });
-            }, 2000); // Show second image for 2 seconds
-        }, 1000); // Show first image for 1 second
+                splash.classList.add('fade-out');
+                const connecting = document.getElementById('connecting-sound');
+                if (connecting) {
+                    const t0 = connecting.volume;
+                    const start = performance.now();
+                    const FADE_MS = 350;
+                    const tick = (now) => {
+                        const k = Math.min(1, (now - start) / FADE_MS);
+                        try { connecting.volume = t0 * (1 - k); } catch (_) {}
+                        if (k < 1) requestAnimationFrame(tick);
+                        else { try { connecting.pause(); connecting.currentTime = 0; connecting.volume = t0; } catch (_) {} }
+                    };
+                    requestAnimationFrame(tick);
+                }
+                setTimeout(() => { if (onComplete) onComplete(); }, 350);
+            }, FRAME_MS * 3);
+        };
         
         // Set up login form handlers
         const loginForm = document.getElementById('login-form');
@@ -151,20 +194,24 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Reload page to show desktop
-                    window.location.reload();
+                    // Play the AIM dial-up splash (signon1→2→3 + modem)
+                    // as the transition, then reload into the desktop.
+                    if (typeof window.playSignOnSplash === 'function') {
+                        window.playSignOnSplash(() => { window.location.reload(); });
+                    } else {
+                        window.location.reload();
+                    }
                 } else {
                     loginError.textContent = data.error || 'Invalid username or password';
                     playSound('error-sound');
+                    loginButton.disabled = false;
+                    loginButton.textContent = 'Sign In';
                 }
             })
             .catch(error => {
                 console.error('Login error:', error);
                 loginError.textContent = 'An error occurred. Please try again.';
                 playSound('error-sound');
-            })
-            .finally(() => {
-                // Reset button state
                 loginButton.disabled = false;
                 loginButton.textContent = 'Sign In';
             });
@@ -216,20 +263,22 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Reload page to show desktop
-                    window.location.reload();
+                    if (typeof window.playSignOnSplash === 'function') {
+                        window.playSignOnSplash(() => { window.location.reload(); });
+                    } else {
+                        window.location.reload();
+                    }
                 } else {
                     registerError.textContent = data.error || 'Failed to create account';
                     playSound('error-sound');
+                    registerButton.disabled = false;
+                    registerButton.textContent = 'Create Account';
                 }
             })
             .catch(error => {
                 console.error('Registration error:', error);
                 registerError.textContent = 'An error occurred. Please try again.';
                 playSound('error-sound');
-            })
-            .finally(() => {
-                // Reset button state
                 registerButton.disabled = false;
                 registerButton.textContent = 'Create Account';
             });
@@ -729,6 +778,53 @@ function showActiveNowWindow() {
     }, REFRESH_INTERVAL);
 }
 
+// ---------- Buddy list (local) ----------
+// AIM-style "buddies" are stored client-side in localStorage, keyed by the
+// signed-in user's nickname so different accounts on the same browser keep
+// separate lists. This avoids adding a backend schema for an optional UI
+// affordance.
+function buddyStorageKey() {
+    const me = (typeof userInfo !== 'undefined' && userInfo.nickname) ? userInfo.nickname : 'anon';
+    return 'aim_buddies_' + me;
+}
+function getBuddies() {
+    try {
+        const raw = localStorage.getItem(buddyStorageKey());
+        const arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr : [];
+    } catch (_) { return []; }
+}
+function setBuddies(list) {
+    try { localStorage.setItem(buddyStorageKey(), JSON.stringify(list)); } catch (_) {}
+}
+function isBuddy(nick) { return getBuddies().includes(nick); }
+function addBuddy(nick) {
+    const b = getBuddies();
+    if (!b.includes(nick)) { b.push(nick); setBuddies(b); }
+}
+function removeBuddyEntry(nick) {
+    setBuddies(getBuddies().filter(n => n !== nick));
+}
+// Last roster passed through updateActiveUsersList, so the buddy toggle can
+// re-render without re-fetching from the server.
+let lastUsersSnapshot = [];
+
+// Click handler for the per-row add/remove buddy buttons. Wired with event
+// delegation in showActiveNowWindow().
+window.handleBuddyToggle = function (btn) {
+    const nick = btn.getAttribute('data-nick');
+    const action = btn.getAttribute('data-action');
+    if (!nick) return;
+    if (action === 'add') {
+        addBuddy(nick);
+        playSound('buddyin-sound');
+    } else {
+        removeBuddyEntry(nick);
+        playSound('buddyout-sound');
+    }
+    updateActiveUsersList(lastUsersSnapshot);
+};
+
 // Keep track of known users for detecting new users
 let knownUsers = [];
 
@@ -813,32 +909,63 @@ function updateActiveUsersList(users) {
         console.error('Active users list element not found');
         return;
     }
-    
+
     if (!users || users.length === 0) {
+        lastUsersSnapshot = [];
         activeUsersList.innerHTML = '<div class="loading">No buddies online</div>';
         return;
     }
-    
+
+    // Cache the roster so the per-row add/remove buttons can re-render
+    // without a network round-trip.
+    lastUsersSnapshot = users.slice();
+
     const userProfile = getUserProfile();
-    
-    activeUsersList.innerHTML = users.map(user => {
+    const buddies = getBuddies();
+
+    // Sort: current user pinned to the top, then buddies (alphabetical),
+    // then everyone else (alphabetical). Mirrors classic AIM behavior.
+    const sorted = users.slice().sort((a, b) => {
+        if (a.nickname === userInfo.nickname) return -1;
+        if (b.nickname === userInfo.nickname) return 1;
+        const aB = buddies.includes(a.nickname);
+        const bB = buddies.includes(b.nickname);
+        if (aB !== bB) return aB ? -1 : 1;
+        return a.nickname.localeCompare(b.nickname);
+    });
+
+    activeUsersList.innerHTML = sorted.map(user => {
         const isCurrentUser = user.nickname === userInfo.nickname;
+        const isBud = buddies.includes(user.nickname);
         const displayName = isCurrentUser ? userProfile.displayName : user.nickname;
         const avatarColor = isCurrentUser ? userProfile.avatarColor : (user.avatarColor || '#007BFF');
         const status = isCurrentUser ? userProfile.status : (user.status || 'online');
-        
+        const safeNick = escapeHtml(user.nickname);
+
+        const buddyToggle = isCurrentUser ? '' : `
+            <button class="buddy-toggle-btn"
+                    data-nick="${safeNick}"
+                    data-action="${isBud ? 'remove' : 'add'}"
+                    title="${isBud ? 'Remove from buddies' : 'Add to buddies'}"
+                    onclick="event.stopPropagation(); handleBuddyToggle(this)">
+                <img src="images/${isBud ? 'remove' : 'add'}-buddy.png"
+                     alt="${isBud ? 'Remove buddy' : 'Add buddy'}">
+            </button>
+        `;
+
         return `
-            <div class="active-user-item">
+            <div class="active-user-item${isBud ? ' is-buddy' : ''}${isCurrentUser ? ' is-self' : ''}">
                 <div class="user-avatar" style="background-color: ${avatarColor}">
                     ${displayName.charAt(0).toUpperCase()}
                     <div class="user-status ${status}"></div>
                 </div>
                 <div class="user-info">
                     <div class="user-name">${escapeHtml(displayName)}${isCurrentUser ? ' (You)' : ''}</div>
-                    <div class="user-status-text">${status === 'offline' ? 'Offline' : 'Online'}</div>
+                    <div class="user-status-text">${isBud ? 'Buddy' : (status === 'offline' ? 'Offline' : 'Online')}</div>
                 </div>
+                ${buddyToggle}
                 ${!isCurrentUser ? `
-                    <button class="win95-button message-button" onclick="showDirectMessageWindow('${escapeHtml(user.nickname)}')">
+                    <button class="win95-button message-button" onclick="showDirectMessageWindow('${safeNick}')">
                         Message
                     </button>
                 ` : ''}
@@ -1103,7 +1230,15 @@ function updateTaskbarClock() {
 function initializeDesktop() {
     // Make windows draggable
     makeWindowsDraggable();
-    
+
+    // Welcome chime — plays once when the desktop renders after sign-in.
+    // force=true so it plays through even if sound notifications are off;
+    // this is the AOL '95 "Welcome!" moment, not a notification.
+    // Browsers may block autoplay until the user has interacted with the
+    // document; that's fine — playSound() swallows the rejection so a
+    // returning user who skipped the splash still gets a desktop.
+    setTimeout(() => { playSound('startup-sound', { force: true }); }, 250);
+
     // Initialize user list in the background immediately
     // This will make users visible faster when the Active Now window is opened
     setTimeout(() => {

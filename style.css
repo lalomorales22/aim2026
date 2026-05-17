@@ -1760,31 +1760,100 @@ body {
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
 
+/* ---------- Splash / Sign-on sequence ---------- */
 .splash-screen {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #000;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at center, #0b1228 0%, #04060d 70%, #000 100%);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.25s ease-out;
 }
 
-.splash-screen img {
-    width: 400px;
-    height: 300px;
+.splash-screen.fade-out {
+    opacity: 0;
+}
+
+/* Faint CRT-style scanlines over the splash for the 90s vibe. */
+.splash-screen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(255,255,255,0.04) 0 1px,
+        transparent 1px 3px
+    );
+    pointer-events: none;
+}
+
+.splash-frame {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 18px;
+    /* Inset/raised Win95 chrome around the splash artwork. */
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #ffffff #404040 #404040 #ffffff;
+    box-shadow:
+        inset 1px 1px 0 #dfdfdf,
+        inset -1px -1px 0 #808080,
+        0 0 0 1px #000,
+        0 14px 40px rgba(0,0,0,0.6);
+    max-width: 92vw;
+}
+
+.splash-frame img {
+    display: block;
+    width: 480px;
+    max-width: 100%;
+    height: auto;
     object-fit: contain;
+    image-rendering: -webkit-optimize-contrast;
+    border: 1px solid;
+    border-color: #404040 #ffffff #ffffff #404040;
+    background: #000;
+}
+
+.splash-caption {
+    font-family: 'MS Sans Serif', 'Segoe UI', Tahoma, sans-serif;
+    font-size: 12px;
+    color: #000;
+    letter-spacing: 0.04em;
+    padding: 4px 10px;
+    background: #c0c0c0;
+    border: 1px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    min-width: 220px;
+    text-align: center;
+}
+
+/* Blinking caret on the caption — old DOS terminal flavor. */
+.splash-caption::after {
+    content: "▮";
+    margin-left: 6px;
+    animation: splash-caret 0.7s steps(2, end) infinite;
+    color: #000080;
+}
+
+@keyframes splash-caret {
+    50% { opacity: 0; }
 }
 
 /* Mobile optimization for splash screen */
 @media (max-width: 768px) {
-    .splash-screen img {
-        width: 90%;
-        height: auto;
-        max-height: 80vh;
+    .splash-frame img {
+        width: 320px;
+    }
+    .splash-caption {
+        min-width: 180px;
     }
 }
 
@@ -1931,6 +2000,788 @@ body {
     }
 }
 
+/* ============================================================
+   THEME POLISH — Windows 95 refresh
+   Refines existing styles without changing layout/structure.
+   Keep this block at/near the bottom so cascade lets it win.
+   ============================================================ */
+
+/* Pixel-snappy 1px ridges everywhere (better than fuzzy 1px solid). */
+.window,
+.dialog,
+.login-window,
+.start-menu,
+.taskbar-item,
+.taskbar-user,
+.taskbar-chatrooms,
+.taskbar-time,
+.start-button,
+.win95-button,
+.profile-section {
+    image-rendering: -webkit-optimize-contrast;
+}
+
+/* ---- Desktop background: classic teal with a more refined dither ---- */
+.desktop {
+    background-color: #007a7a;
+    background-image:
+        radial-gradient(ellipse at top left, rgba(255,255,255,0.06), transparent 55%),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 3px),
+        repeating-linear-gradient(90deg, rgba(0,0,0,0.05) 0 1px, transparent 1px 3px);
+}
+
+.desktop-icon {
+    padding: 6px 4px 4px;
+    border: 1px dotted transparent;
+    border-radius: 1px;
+    transition: background 0.05s linear;
+}
+
+.desktop-icon:hover {
+    background-color: rgba(255,255,255,0.06);
+}
+
+.desktop-icon:focus,
+.desktop-icon.selected {
+    outline: none;
+    border-color: rgba(255,255,255,0.7);
+    background-color: rgba(0,0,128,0.35);
+}
+
+.desktop-icon img {
+    filter: drop-shadow(1px 1px 0 rgba(0,0,0,0.45));
+}
+
+.desktop-icon span {
+    font-size: 12px;
+    line-height: 1.15;
+    padding: 1px 3px;
+}
+
+/* ---- Windows: classic chrome with real 2px raised borders ----
+   Real borders (rather than inset box-shadow) are critical: the title bar
+   gradient paints inside the border edge, so it extends edge-to-edge of the
+   content area with no grey strip alongside it. We use flex column so the
+   header and content tile cleanly with no 2px gap or overflow bleed. */
+.window,
+.dialog,
+.login-window {
+    background-color: #c0c0c0;
+    border-style: solid;
+    border-width: 2px;
+    border-top-color: #dfdfdf;
+    border-left-color: #dfdfdf;
+    border-right-color: #404040;
+    border-bottom-color: #404040;
+    box-shadow:
+        /* Thin inner highlight/shadow ridge for the classic dual-bevel look.
+           These are 1px inset shadows that only touch the very inner edge;
+           they're painted under the title bar and content backgrounds so
+           the chrome stays crisp without bleeding into the children. */
+        inset  1px  1px 0 #ffffff,
+        inset -1px -1px 0 #808080,
+        2px 2px 6px rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* Classic Win95 gradient title bar — fixed 22px, fills the window width. */
+.window-header {
+    background: linear-gradient(to right, #000080 0%, #1084d0 100%);
+    color: #fff;
+    padding: 3px 4px 3px 6px;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    user-select: none;
+    flex: 0 0 22px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    /* 1px black hairline below the title bar — separates it from content
+       crisply and prevents any gradient bleed into the grey area. */
+    border-bottom: 1px solid #000080;
+}
+
+/* When a window is in the background, the title bar dims (visual only — no
+   real focus tracking in JS, but the styling is here for when we add it). */
+.window.inactive .window-header {
+    background: linear-gradient(to right, #808080 0%, #b0b0b0 100%);
+    color: #d4d0c8;
+}
+
+.window-title {
+    font-weight: bold;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.window-controls {
+    display: flex;
+    gap: 2px;
+}
+
+.control-button {
+    width: 17px;
+    height: 15px;
+    line-height: 13px;
+    padding: 0;
+    background: #c0c0c0;
+    color: #000;
+    font-family: 'MS Sans Serif', 'Segoe UI', Tahoma, sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+    border: 0;
+    box-shadow:
+        inset  1px  1px 0 #ffffff,
+        inset -1px -1px 0 #404040,
+        inset  2px  2px 0 #dfdfdf,
+        inset -2px -2px 0 #808080;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.control-button:active {
+    box-shadow:
+        inset  1px  1px 0 #404040,
+        inset -1px -1px 0 #ffffff,
+        inset  2px  2px 0 #808080,
+        inset -2px -2px 0 #dfdfdf;
+}
+
+.control-button.close {
+    /* The classic Win95 close button isn't red, but the hover hint helps users. */
+}
+
+.control-button.close:hover {
+    background: #d44;
+    color: #fff;
+}
+
+/* ---- Buttons: tightened Win95 raised look with proper press state ---- */
+.win95-button {
+    background: #c0c0c0;
+    color: #000;
+    border: 0;
+    padding: 4px 12px;
+    min-width: 75px;
+    font-family: 'MS Sans Serif', 'Segoe UI', Tahoma, sans-serif;
+    font-size: 12px;
+    line-height: 1.2;
+    cursor: pointer;
+    box-shadow:
+        inset  1px  1px 0 #ffffff,
+        inset -1px -1px 0 #404040,
+        inset  2px  2px 0 #dfdfdf,
+        inset -2px -2px 0 #808080;
+    transition: none;
+}
+
+.win95-button:hover {
+    background: #cfcfcf;
+}
+
+.win95-button:active,
+.win95-button.active {
+    background: #b8b8b8;
+    box-shadow:
+        inset  1px  1px 0 #404040,
+        inset -1px -1px 0 #ffffff,
+        inset  2px  2px 0 #808080,
+        inset -2px -2px 0 #dfdfdf;
+    padding: 5px 11px 3px 13px;
+}
+
+.win95-button:focus {
+    outline: 1px dotted #000;
+    outline-offset: -4px;
+}
+
+.win95-button:disabled {
+    color: #808080;
+    text-shadow: 1px 1px 0 #ffffff;
+    cursor: not-allowed;
+}
+
+/* Primary blue button keeps its Luna-blue look but gets the new bevel. */
+.primary-button {
+    background: linear-gradient(to bottom, #3a78d4 0%, #1d4ea8 100%);
+    color: #fff;
+    font-weight: bold;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+    box-shadow:
+        inset  1px  1px 0 #6ba6f5,
+        inset -1px -1px 0 #0a2768,
+        inset  2px  2px 0 #4a8de0,
+        inset -2px -2px 0 #143a85;
+}
+
+.primary-button:hover {
+    background: linear-gradient(to bottom, #4684de 0%, #225bbf 100%);
+}
+
+.primary-button:active {
+    background: linear-gradient(to bottom, #1d4ea8 0%, #3a78d4 100%);
+    box-shadow:
+        inset  1px  1px 0 #0a2768,
+        inset -1px -1px 0 #6ba6f5,
+        inset  2px  2px 0 #143a85,
+        inset -2px -2px 0 #4a8de0;
+}
+
+/* ---- Inputs: sunken field with subtle inner shadow ---- */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+textarea,
+select,
+.win95-input,
+.win95-textarea,
+.form-group input,
+.message-input {
+    background: #ffffff;
+    color: #000;
+    border: 0 !important;
+    padding: 4px 6px;
+    font-family: 'MS Sans Serif', 'Segoe UI', Tahoma, sans-serif;
+    font-size: 12px;
+    box-shadow:
+        inset  1px  1px 0 #808080,
+        inset -1px -1px 0 #ffffff,
+        inset  2px  2px 0 #404040,
+        inset -2px -2px 0 #dfdfdf;
+    border-radius: 0 !important;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+textarea:focus,
+select:focus,
+.win95-input:focus,
+.win95-textarea:focus,
+.form-group input:focus,
+.message-input:focus {
+    outline: none;
+    background: #fffce8;
+}
+
+/* ---- Taskbar: classic 28px height with a top highlight ---- */
+.taskbar {
+    height: 28px;
+    background: #c0c0c0;
+    border-top: 0;
+    box-shadow:
+        inset 0  1px 0 #ffffff,
+        inset 0 -1px 0 #404040,
+        inset 0  2px 0 #dfdfdf,
+        0 -1px 0 #000;
+    gap: 3px;
+    padding: 2px 3px;
+}
+
+.start-button {
+    background: #c0c0c0;
+    border: 0;
+    box-shadow:
+        inset  1px  1px 0 #ffffff,
+        inset -1px -1px 0 #404040,
+        inset  2px  2px 0 #dfdfdf,
+        inset -2px -2px 0 #808080;
+    height: 24px;
+    min-width: 62px;
+    padding: 0 8px 0 4px;
+    font-weight: bold;
+    font-size: 12px;
+    letter-spacing: 0.01em;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
+.start-button:active,
+.start-button.active {
+    box-shadow:
+        inset  1px  1px 0 #404040,
+        inset -1px -1px 0 #ffffff,
+        inset  2px  2px 0 #808080,
+        inset -2px -2px 0 #dfdfdf;
+    padding: 1px 7px 0 5px;
+}
+
+.start-button::before {
+    width: 18px;
+    height: 18px;
+}
+
+.taskbar-user,
+.taskbar-chatrooms,
+.taskbar-time {
+    height: 22px;
+    box-sizing: border-box;
+    border: 0;
+    background: #c0c0c0;
+    box-shadow:
+        inset  1px  1px 0 #808080,
+        inset -1px -1px 0 #ffffff;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    margin-left: 4px;
+}
+
+.taskbar-time {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Taskbar-item buttons (open windows) — raised when inactive, pressed when active. */
+.taskbar-item {
+    height: 22px;
+    box-sizing: border-box;
+    border: 0;
+    background: #c0c0c0;
+    box-shadow:
+        inset  1px  1px 0 #ffffff,
+        inset -1px -1px 0 #404040,
+        inset  2px  2px 0 #dfdfdf,
+        inset -2px -2px 0 #808080;
+    padding: 0 10px;
+    max-width: 180px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    margin-right: 3px;
+}
+
+.taskbar-item.active {
+    background: #b8b8b8;
+    box-shadow:
+        inset  1px  1px 0 #404040,
+        inset -1px -1px 0 #ffffff,
+        inset  2px  2px 0 #808080,
+        inset -2px -2px 0 #dfdfdf;
+    font-weight: bold;
+}
+
+/* ---- Start menu: gradient sidebar + classic body ---- */
+.start-menu {
+    width: 220px;
+    box-shadow:
+        inset  1px  1px 0 #ffffff,
+        inset -1px -1px 0 #404040,
+        inset  2px  2px 0 #dfdfdf,
+        inset -2px -2px 0 #808080,
+        2px 2px 6px rgba(0,0,0,0.35);
+    border: 0;
+    overflow: hidden;
+}
+
+.start-menu-header {
+    /* Vertical "Windows 95" gradient band on the left of the start menu —
+       implemented as a header with rotated text further down. */
+    background: linear-gradient(to bottom, #1d4ea8 0%, #0a1f5c 100%);
+    height: auto;
+    padding: 0;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 22px;
+}
+
+.start-menu-title {
+    color: #ffffff;
+    font-family: 'MS Sans Serif', 'Segoe UI', Tahoma, sans-serif;
+    font-weight: bold;
+    font-size: 18px;
+    transform: rotate(-90deg);
+    transform-origin: left top;
+    position: absolute;
+    left: 18px;
+    bottom: 8px;
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.35);
+}
+
+.start-menu-items {
+    margin-left: 22px;
+    padding: 4px 2px;
+    background: #c0c0c0;
+}
+
+.start-menu-item {
+    padding: 6px 8px 6px 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.start-menu-item:hover {
+    background-color: #0a1f8c;
+    color: #fff;
+}
+
+.start-menu-item img {
+    width: 18px;
+    height: 18px;
+}
+
+.start-menu-divider {
+    height: 0;
+    margin: 4px 4px;
+    border-top: 1px solid #808080;
+    border-bottom: 1px solid #ffffff;
+}
+
+/* ---- Login window: refined AOL '95 sign-on ---- */
+.login-window {
+    width: 420px !important;
+    min-height: 0 !important;
+    height: auto !important;
+}
+
+.login-window .window-content {
+    padding: 0;
+    background: #c0c0c0;
+}
+
+.login-container {
+    padding: 22px 26px 20px;
+    gap: 4px;
+}
+
+.aol-logo {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 6px;
+    image-rendering: -webkit-optimize-contrast;
+    filter: drop-shadow(1px 1px 0 rgba(0,0,0,0.25));
+}
+
+.login-container h2 {
+    font-size: 14px;
+    font-weight: bold;
+    color: #000080;
+    margin-bottom: 14px;
+    letter-spacing: 0.02em;
+}
+
+.form-group {
+    margin-bottom: 10px;
+}
+
+.form-group label {
+    font-size: 12px;
+    color: #000;
+    margin-bottom: 4px;
+    font-weight: normal;
+}
+
+.form-group input {
+    height: 26px;
+    font-size: 13px;
+    padding: 3px 6px;
+}
+
+.form-error {
+    color: #b00020;
+    font-size: 12px;
+    margin: 6px 0 0;
+    font-weight: bold;
+    min-height: 16px;
+}
+
+/* Slim "remember me / forgot password" row look-alike — empty hook for future use. */
+.login-actions {
+    margin-top: 8px;
+    gap: 8px;
+}
+
+.primary-button,
+.secondary-button {
+    height: 28px;
+    min-width: 96px;
+    font-size: 12px;
+}
+
+/* ---- Dialogs ---- */
+.dialog {
+    width: 340px;
+}
+
+.dialog .window-content {
+    padding: 14px;
+}
+
+.dialog-buttons {
+    margin-top: 18px;
+    gap: 6px;
+}
+
+/* ---- Chat window refinements ---- */
+.chat-messages,
+.dm-messages,
+.room-list,
+.active-users-list {
+    background: #ffffff;
+    border: 0;
+    box-shadow:
+        inset  1px  1px 0 #808080,
+        inset -1px -1px 0 #ffffff,
+        inset  2px  2px 0 #404040,
+        inset -2px -2px 0 #dfdfdf;
+}
+
+.chat-status {
+    padding: 2px 4px;
+    color: #404040;
+}
+
+.chat-input {
+    gap: 6px;
+    padding: 6px 6px 6px 6px;
+    border-top: 1px solid #808080;
+    box-shadow: inset 0 1px 0 #ffffff;
+}
+
+.message-input {
+    height: 26px;
+    padding: 3px 6px;
+}
+
+.send-button {
+    height: 26px;
+    min-width: 64px;
+    padding: 2px 12px;
+}
+
+/* Message bubbles get a flatter, more readable look (still bordered). */
+.message {
+    background: #ffffff;
+    border: 1px solid #d4d0c8;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 6px 8px;
+    margin-bottom: 6px;
+}
+
+.message.sent {
+    background: #eef3ff;
+    border-color: #b8c8ee;
+    margin-left: 18px;
+}
+
+.message.received {
+    background: #ffffff;
+    margin-right: 18px;
+}
+
+.message-sender { color: #000080; font-weight: bold; }
+.message-time   { color: #707070; font-size: 10px; }
+
+.system-message {
+    background: #fff8d2;
+    border: 1px dashed #c9a800;
+    color: #5a4a00;
+    font-style: italic;
+    padding: 4px 8px;
+}
+
+/* ---- Buddy add/remove toggle (per-row icon button) ---- */
+.buddy-toggle-btn {
+    background: transparent;
+    border: 0;
+    padding: 2px;
+    margin-right: 6px;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+    transition: background-color 0.08s linear;
+}
+
+.buddy-toggle-btn:hover {
+    background: rgba(0,0,128,0.10);
+}
+
+.buddy-toggle-btn:active {
+    background: rgba(0,0,128,0.18);
+    transform: translate(1px, 1px);
+}
+
+.buddy-toggle-btn img {
+    width: 22px;
+    height: 22px;
+    image-rendering: -webkit-optimize-contrast;
+    pointer-events: none; /* clicks land on the button, not the img */
+}
+
+/* Highlight buddy rows with a soft AIM-yellow tint. */
+.active-user-item.is-buddy {
+    background: linear-gradient(to right, #fff7d6 0%, #ffffff 60%);
+}
+
+.active-user-item.is-buddy .user-name {
+    color: #6a4a00;
+}
+
+.active-user-item.is-buddy .user-name::before {
+    content: "★";
+    margin-right: 5px;
+    color: #d4a000;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.15);
+}
+
+.active-user-item.is-self {
+    background: #eef3ff;
+}
+
+/* ---- Room / user list rows: subtle hover + selection ---- */
+.room-item,
+.active-user-item {
+    border-bottom: 1px solid #ececec;
+    padding: 6px 8px;
+}
+
+.room-item:hover,
+.active-user-item:hover {
+    background: #e6efff;
+}
+
+.room-item.selected,
+.active-user-item.selected {
+    background: #316ac5;
+    color: #fff;
+}
+
+.room-item.selected .room-info,
+.active-user-item.selected .user-status-text {
+    color: #d6e2f5;
+}
+
+/* ---- Scrollbars: faux Win95 chrome (WebKit only — Firefox falls back to thin) ---- */
+.chat-messages::-webkit-scrollbar,
+.dm-messages::-webkit-scrollbar,
+.room-list::-webkit-scrollbar,
+.active-users-list::-webkit-scrollbar,
+.window-content::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+    background: #c0c0c0;
+}
+
+.chat-messages::-webkit-scrollbar-track,
+.dm-messages::-webkit-scrollbar-track,
+.room-list::-webkit-scrollbar-track,
+.active-users-list::-webkit-scrollbar-track,
+.window-content::-webkit-scrollbar-track {
+    background:
+        repeating-linear-gradient(45deg,
+            #d4d0c8 0 2px, #c0c0c0 2px 4px);
+}
+
+.chat-messages::-webkit-scrollbar-thumb,
+.dm-messages::-webkit-scrollbar-thumb,
+.room-list::-webkit-scrollbar-thumb,
+.active-users-list::-webkit-scrollbar-thumb,
+.window-content::-webkit-scrollbar-thumb {
+    background: #c0c0c0;
+    box-shadow:
+        inset  1px  1px 0 #ffffff,
+        inset -1px -1px 0 #404040,
+        inset  2px  2px 0 #dfdfdf,
+        inset -2px -2px 0 #808080;
+}
+
+.chat-messages::-webkit-scrollbar-button,
+.dm-messages::-webkit-scrollbar-button,
+.room-list::-webkit-scrollbar-button,
+.active-users-list::-webkit-scrollbar-button,
+.window-content::-webkit-scrollbar-button {
+    background: #c0c0c0;
+    box-shadow:
+        inset  1px  1px 0 #ffffff,
+        inset -1px -1px 0 #404040,
+        inset  2px  2px 0 #dfdfdf,
+        inset -2px -2px 0 #808080;
+    width: 16px;
+    height: 16px;
+}
+
+* { scrollbar-width: thin; scrollbar-color: #808080 #c0c0c0; }
+
+/* ---- Profile / panels ---- */
+.profile-section {
+    background: #c0c0c0;
+    border: 0;
+    box-shadow:
+        inset  1px  1px 0 #ffffff,
+        inset -1px -1px 0 #404040,
+        inset  2px  2px 0 #dfdfdf,
+        inset -2px -2px 0 #808080;
+    padding: 12px;
+}
+
+.section-title {
+    color: #000080;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #808080;
+    box-shadow: 0 1px 0 #ffffff;
+}
+
+/* ---- Toolbar ---- */
+.toolbar {
+    padding: 6px;
+    background: #c0c0c0;
+    border-bottom: 0;
+    box-shadow: inset 0 -1px 0 #808080, 0 1px 0 #ffffff;
+    margin-bottom: 6px;
+    gap: 4px;
+}
+
+/* ---- Window content default ----
+   Flex child that takes all remaining vertical space below the title bar.
+   We explicitly override the legacy `height: calc(100% - 20px)` so there's
+   no 2px mismatch with the 22px title bar, no overflow bleed at the
+   bottom, and no exposed window background between header and content. */
+.window-content {
+    background: #c0c0c0;
+    padding: 8px;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    overflow: auto;
+}
+
+/* Resize-enabled "desktop" windows: switch outer overflow to hidden so the
+   chrome stays tight. resize:both still works because `overflow != visible`.
+   Content scrolling is handled by .window-content (overflow:auto). */
+@media (min-width: 1025px) {
+    .window:not(.login-window):not(.dialog) {
+        overflow: hidden;
+    }
+    .window:not(.login-window):not(.dialog) .window-header::after { content: none; }
+}
+
 /* Accessibility improvements */
 @media (prefers-reduced-motion: reduce) {
     * {
@@ -1941,10 +2792,11 @@ body {
 
 /* High contrast mode */
 @media (forced-colors: active) {
-    .window {
+    .window,
+    .login-window,
+    .dialog {
         border: 2px solid CanvasText;
     }
-
     .win95-button {
         border: 2px solid CanvasText;
     }

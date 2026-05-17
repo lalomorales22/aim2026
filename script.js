@@ -612,7 +612,7 @@ function showProfileWindow() {
             profileWindow.style.display = 'none';
         });
     } else {
-        profileWindow.style.display = 'block';
+        profileWindow.style.display = 'flex';
     }
     
     showWindow('profile-window');
@@ -701,7 +701,7 @@ function updateProfileUI() {
     
     // Recreate Active Now window to reflect changes
     const oldActiveNow = document.getElementById('active-now-window');
-    if (oldActiveNow && oldActiveNow.style.display === 'block') {
+    if (oldActiveNow && oldActiveNow.style.display !== 'none' && oldActiveNow.style.display !== '') {
         oldActiveNow.remove();
         showActiveNowWindow();
     }
@@ -771,7 +771,7 @@ function showActiveNowWindow() {
             }
         });
     } else {
-        activeNowWindow.style.display = 'block';
+        activeNowWindow.style.display = 'flex';
     }
 
     showWindow('active-now-window');
@@ -1552,7 +1552,7 @@ function initializeDesktop() {
         chatroomsIcon.addEventListener('click', () => {
             const chatroomsWindow = document.getElementById('chatrooms-window');
             if (chatroomsWindow) {
-                chatroomsWindow.style.display = 'block';
+                chatroomsWindow.style.display = 'flex';
                 showWindow('chatrooms-window');
                 loadChatrooms();
             }
@@ -1567,7 +1567,7 @@ function initializeDesktop() {
     
     if (createRoomBtn) {
         createRoomBtn.addEventListener('click', () => {
-            createRoomDialog.style.display = 'block';
+            createRoomDialog.style.display = 'flex';
             showWindow('create-room-dialog');
         });
     }
@@ -1630,7 +1630,7 @@ function showWindow(windowId) {
     }
 
     // Show the requested window
-    window.style.display = 'block';
+    window.style.display = 'flex';
     bringToFront(window);
 
     // Add to taskbar if not already there
@@ -1650,7 +1650,7 @@ function showWindow(windowId) {
         // Add click handler to taskbar item
         taskbarItem.addEventListener('click', () => {
             if (window.style.display === 'none') {
-                window.style.display = 'block';
+                window.style.display = 'flex';
                 bringToFront(window);
                 taskbarItem.classList.add('active');
             } else {
@@ -1803,7 +1803,7 @@ function openChatRoom(room) {
         chatWindow = template.cloneNode(true);
         chatWindow.id = `chat-window-${room.id}`;
         chatWindow.dataset.roomId = room.id;
-        chatWindow.style.display = 'block';
+        chatWindow.style.display = 'flex';
         
         // Set window position slightly offset from previous windows
         const offset = document.querySelectorAll('.chat-window').length * 20;
@@ -1873,7 +1873,7 @@ function openChatRoom(room) {
         // Update active rooms count
         updateActiveRoomsCount();
     } else {
-        chatWindow.style.display = 'block';
+        chatWindow.style.display = 'flex';
     }
     
     showWindow(chatWindow.id);

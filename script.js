@@ -713,44 +713,53 @@ const REFRESH_INTERVAL = 10000; // 10 seconds
 
 function showActiveNowWindow() {
     let activeNowWindow = document.getElementById('active-now-window');
-    
+
     if (!activeNowWindow) {
-        // Create the Active Now window
         activeNowWindow = document.createElement('div');
         activeNowWindow.id = 'active-now-window';
-        activeNowWindow.className = 'window';
-        activeNowWindow.style.width = '300px';
-        activeNowWindow.style.height = '400px';
-        activeNowWindow.style.top = '120px';
+        activeNowWindow.className = 'window buddy-list-window';
+        activeNowWindow.style.width = '290px';
+        activeNowWindow.style.height = '440px';
+        activeNowWindow.style.top = '90px';
         activeNowWindow.style.left = '200px';
-        
+
         activeNowWindow.innerHTML = `
             <div class="window-header">
                 <div class="window-title">Buddy List</div>
                 <div class="window-controls">
-                    <button class="control-button minimize">-</button>
-                    <button class="control-button maximize">□</button>
-                    <button class="control-button close">×</button>
+                    <button class="control-button minimize" type="button">-</button>
+                    <button class="control-button maximize" type="button">□</button>
+                    <button class="control-button close" type="button">×</button>
                 </div>
             </div>
-            <div class="window-content">
-                <div class="active-users-controls">
-                    <button class="win95-button refresh-users-btn">Refresh</button>
-                    <span class="auto-refresh-status">Auto-refresh: ON</span>
+            <div class="window-content buddy-list-content">
+                <div class="buddy-toolbar">
+                    <button class="win95-button buddy-toolbar-btn" id="buddy-add-btn" type="button" title="Add a buddy by screen name">
+                        <img src="images/add-buddy.png" alt=""><span>Add</span>
+                    </button>
+                    <button class="win95-button buddy-toolbar-btn" id="buddy-remove-btn" type="button" title="Remove a buddy">
+                        <img src="images/remove-buddy.png" alt=""><span>Remove</span>
+                    </button>
+                    <span class="buddy-toolbar-spacer"></span>
+                    <button class="win95-button refresh-users-btn icon-only" type="button" title="Refresh now">&#x21bb;</button>
                 </div>
                 <div class="active-users-list" id="active-users-list">
-                    <div class="loading">Loading buddy list...</div>
+                    <div class="loading">Loading buddy list&hellip;</div>
+                </div>
+                <div class="buddy-statusbar">
+                    <span id="buddy-statusbar-text">&nbsp;</span>
                 </div>
             </div>
         `;
-        
+
         document.querySelector('.win95-container').appendChild(activeNowWindow);
         makeWindowsDraggable();
-        
-        // Add event listener for refresh button
+
         activeNowWindow.querySelector('.refresh-users-btn').addEventListener('click', fetchActiveUsers);
-        
-        // Set up event listener for window close to clear auto-refresh
+        activeNowWindow.querySelector('#buddy-add-btn').addEventListener('click', () => showAddBuddyDialog());
+        activeNowWindow.querySelector('#buddy-remove-btn').addEventListener('click', () => showRemoveBuddyDialog());
+
+        // Stop the auto-refresh timer when the window is closed.
         activeNowWindow.querySelector('.control-button.close').addEventListener('click', () => {
             if (activeUsersRefreshInterval) {
                 clearInterval(activeUsersRefreshInterval);
@@ -760,50 +769,282 @@ function showActiveNowWindow() {
     } else {
         activeNowWindow.style.display = 'block';
     }
-    
+
     showWindow('active-now-window');
-    
-    // Fetch active users from server immediately
+
     fetchActiveUsers();
-    
-    // Set up auto-refresh timer
-    if (activeUsersRefreshInterval) {
-        clearInterval(activeUsersRefreshInterval);
-    }
-    
+
+    if (activeUsersRefreshInterval) clearInterval(activeUsersRefreshInterval);
     activeUsersRefreshInterval = setInterval(() => {
-        if (activeNowWindow.style.display !== 'none') {
-            fetchActiveUsers();
-        }
+        if (activeNowWindow.style.display !== 'none') fetchActiveUsers();
     }, REFRESH_INTERVAL);
 }
 
-// ---------- Buddy list (local) ----------
-// AIM-style "buddies" are stored client-side in localStorage, keyed by the
-// signed-in user's nickname so different accounts on the same browser keep
-// separate lists. This avoids adding a backend schema for an optional UI
-// affordance.
+// ---------- Add / Remove buddy dialogs ----------
+// Both dialogs are Win95-style modals built lazily on first use and reused.
+// They append to .win95-container so they ride on top of everything.
+function ensureBuddyDialog(id, build) {
+    let dlg = document.getElementById(id);
+    if (dlg) return dlg;
+    dlg = document.createElement('div');
+    dlg.id = id;
+    dlg.className = 'window dialog buddy-dialog';
+    dlg.style.display = 'none';
+    dlg.style.width = '320px';
+    dlg.innerHTML = build();
+    document.querySelector('.win95-container').appendChild(dlg);
+    makeWindowsDraggable();
+    return dlg;
+}
+
+function showAddBuddyDialog(prefillNick) {
+    const dlg = ensureBuddyDialog('add-buddy-dialog', () => `
+        <div class="window-header">
+            <div class="window-title">Add Buddy</div>
+            <div class="window-controls">
+                <button class="control-button close" type="button">×</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="buddy-dialog-body">
+                <img src="images/add-buddy.png" class="buddy-dialog-icon" alt="">
+                <div class="buddy-dialog-form">
+                    <label for="add-buddy-input" class="buddy-dialog-prompt">
+                        Type the screen name of the buddy you'd like to add:
+                    </label>
+                    <input type="text" id="add-buddy-input" class="win95-input" maxlength="32" autocomplete="off">
+                    <div class="form-error" id="add-buddy-error"></div>
+                </div>
+            </div>
+            <div class="dialog-buttons">
+                <button class="win95-button primary-button" id="add-buddy-confirm" type="button">Add</button>
+                <button class="win95-button" id="add-buddy-cancel" type="button">Cancel</button>
+            </div>
+        </div>
+    `);
+
+    const input = dlg.querySelector('#add-buddy-input');
+    const error = dlg.querySelector('#add-buddy-error');
+    const confirm = dlg.querySelector('#add-buddy-confirm');
+    const cancel = dlg.querySelector('#add-buddy-cancel');
+    const close  = dlg.querySelector('.control-button.close');
+
+    input.value = prefillNick || '';
+    error.textContent = '';
+
+    const closeDialog = () => { dlg.style.display = 'none'; };
+    const submit = () => {
+        const nick = input.value.trim();
+        if (!nick) { error.textContent = 'Please enter a screen name.'; return; }
+        if (nick === userInfo.nickname) { error.textContent = "You can't add yourself."; return; }
+        if (isBuddy(nick)) { error.textContent = `${nick} is already on your buddy list.`; return; }
+        addBuddy(nick);
+        playSound('buddyin-sound');
+        setBuddyStatus(`Added ${nick} to your buddy list.`);
+        updateActiveUsersList(lastUsersSnapshot);
+        closeDialog();
+    };
+
+    // Re-bind handlers each open (overwrites previous bindings).
+    confirm.onclick = submit;
+    cancel.onclick  = closeDialog;
+    close.onclick   = closeDialog;
+    input.onkeydown = (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); submit(); }
+        else if (e.key === 'Escape') { e.preventDefault(); closeDialog(); }
+    };
+
+    dlg.style.display = 'flex';
+    bringToFront(dlg);
+    setTimeout(() => input.focus(), 50);
+}
+
+function showRemoveBuddyDialog() {
+    const buddies = getBuddies();
+    if (buddies.length === 0) {
+        setBuddyStatus('You have no buddies to remove yet.');
+        showAddBuddyDialog(); // friendly nudge — open Add instead
+        return;
+    }
+
+    const dlg = ensureBuddyDialog('remove-buddy-dialog', () => `
+        <div class="window-header">
+            <div class="window-title">Remove Buddy</div>
+            <div class="window-controls">
+                <button class="control-button close" type="button">×</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="buddy-dialog-body">
+                <img src="images/remove-buddy.png" class="buddy-dialog-icon" alt="">
+                <div class="buddy-dialog-form">
+                    <label for="remove-buddy-select" class="buddy-dialog-prompt">
+                        Pick a buddy to remove from your list:
+                    </label>
+                    <select id="remove-buddy-select" class="win95-input"></select>
+                    <div class="form-error" id="remove-buddy-error"></div>
+                </div>
+            </div>
+            <div class="dialog-buttons">
+                <button class="win95-button primary-button" id="remove-buddy-confirm" type="button">Remove</button>
+                <button class="win95-button" id="remove-buddy-cancel" type="button">Cancel</button>
+            </div>
+        </div>
+    `);
+
+    const select  = dlg.querySelector('#remove-buddy-select');
+    const error   = dlg.querySelector('#remove-buddy-error');
+    const confirm = dlg.querySelector('#remove-buddy-confirm');
+    const cancel  = dlg.querySelector('#remove-buddy-cancel');
+    const close   = dlg.querySelector('.control-button.close');
+
+    select.innerHTML = buddies
+        .slice()
+        .sort((a, b) => a.localeCompare(b))
+        .map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`)
+        .join('');
+    error.textContent = '';
+
+    const closeDialog = () => { dlg.style.display = 'none'; };
+    const submit = () => {
+        const nick = select.value;
+        if (!nick) { error.textContent = 'Pick a buddy first.'; return; }
+        removeBuddyEntry(nick);
+        playSound('buddyout-sound');
+        setBuddyStatus(`Removed ${nick} from your buddy list.`);
+        updateActiveUsersList(lastUsersSnapshot);
+        closeDialog();
+    };
+
+    confirm.onclick = submit;
+    cancel.onclick  = closeDialog;
+    close.onclick   = closeDialog;
+    select.onkeydown = (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); submit(); }
+        else if (e.key === 'Escape') { e.preventDefault(); closeDialog(); }
+    };
+
+    dlg.style.display = 'flex';
+    bringToFront(dlg);
+    setTimeout(() => select.focus(), 50);
+}
+
+// Small helper to update the Buddy List statusbar (bottom strip).
+function setBuddyStatus(text) {
+    const el = document.getElementById('buddy-statusbar-text');
+    if (el) {
+        el.textContent = text;
+        // Fade back to a neutral message after a few seconds.
+        clearTimeout(setBuddyStatus._t);
+        setBuddyStatus._t = setTimeout(() => {
+            if (el.textContent === text) el.textContent = ' ';
+        }, 4000);
+    }
+}
+
+// ---------- Buddy list (server-backed) ----------
+// Buddies live in the SQLite `buddies` table (server-side) so the list
+// follows the user across devices and browsers. The in-memory cache below
+// makes reads synchronous (the buddy-list UI re-renders frequently), and
+// localStorage holds a snapshot so the UI is correct on a cold reload
+// before the network fetch completes.
+let buddiesCache = [];
+let buddiesLoaded = false;
+
 function buddyStorageKey() {
     const me = (typeof userInfo !== 'undefined' && userInfo.nickname) ? userInfo.nickname : 'anon';
     return 'aim_buddies_' + me;
 }
+
 function getBuddies() {
+    if (buddiesLoaded) return buddiesCache.slice();
+    // Cold start fallback: hydrate from the localStorage snapshot so the
+    // first render after page load isn't empty.
     try {
         const raw = localStorage.getItem(buddyStorageKey());
         const arr = raw ? JSON.parse(raw) : [];
-        return Array.isArray(arr) ? arr : [];
-    } catch (_) { return []; }
+        if (Array.isArray(arr)) buddiesCache = arr;
+    } catch (_) {}
+    return buddiesCache.slice();
 }
-function setBuddies(list) {
-    try { localStorage.setItem(buddyStorageKey(), JSON.stringify(list)); } catch (_) {}
-}
+
 function isBuddy(nick) { return getBuddies().includes(nick); }
-function addBuddy(nick) {
-    const b = getBuddies();
-    if (!b.includes(nick)) { b.push(nick); setBuddies(b); }
+
+function setBuddies(list) {
+    buddiesCache = list.slice();
+    try { localStorage.setItem(buddyStorageKey(), JSON.stringify(buddiesCache)); } catch (_) {}
 }
+
+// Initial load from the server. Called from initializeDesktop() after the
+// signed-in user is known. Refreshes the buddy list UI if it's already open.
+function loadBuddiesFromBackend() {
+    fetch('backend.php?endpoint=buddies', { credentials: 'same-origin' })
+        .then(r => r.json())
+        .then(data => {
+            if (data && data.success) {
+                buddiesCache = Array.isArray(data.buddies) ? data.buddies : [];
+                buddiesLoaded = true;
+                try { localStorage.setItem(buddyStorageKey(), JSON.stringify(buddiesCache)); } catch (_) {}
+                if (lastUsersSnapshot && lastUsersSnapshot.length) {
+                    updateActiveUsersList(lastUsersSnapshot);
+                }
+            }
+        })
+        .catch(err => {
+            console.warn('Buddies load failed, falling back to local snapshot:', err);
+            buddiesLoaded = true; // mark loaded so the cache is treated as authoritative
+        });
+}
+
+// Optimistic add: update the cache first so the UI reflects the change
+// immediately, then POST to the server. On failure, roll back and surface
+// the error in the statusbar.
+function addBuddy(nick) {
+    if (!nick) return;
+    if (!buddiesCache.includes(nick)) {
+        buddiesCache.push(nick);
+        try { localStorage.setItem(buddyStorageKey(), JSON.stringify(buddiesCache)); } catch (_) {}
+    }
+    window.apiPost('add-buddy', { nickname: nick })
+        .then(r => r.json())
+        .then(d => {
+            if (!d || !d.success) {
+                const msg = (d && d.error) ? d.error : 'server error';
+                console.warn('add-buddy rejected:', msg);
+                buddiesCache = buddiesCache.filter(n => n !== nick);
+                try { localStorage.setItem(buddyStorageKey(), JSON.stringify(buddiesCache)); } catch (_) {}
+                if (typeof setBuddyStatus === 'function') setBuddyStatus('Could not save buddy: ' + msg);
+                if (lastUsersSnapshot && lastUsersSnapshot.length) updateActiveUsersList(lastUsersSnapshot);
+            }
+        })
+        .catch(err => {
+            console.warn('add-buddy network error:', err);
+            // Network blip — leave the optimistic add in place; will reconcile on next load.
+        });
+}
+
 function removeBuddyEntry(nick) {
-    setBuddies(getBuddies().filter(n => n !== nick));
+    if (!nick) return;
+    const had = buddiesCache.includes(nick);
+    buddiesCache = buddiesCache.filter(n => n !== nick);
+    try { localStorage.setItem(buddyStorageKey(), JSON.stringify(buddiesCache)); } catch (_) {}
+    window.apiPost('remove-buddy', { nickname: nick })
+        .then(r => r.json())
+        .then(d => {
+            if (!d || !d.success) {
+                const msg = (d && d.error) ? d.error : 'server error';
+                console.warn('remove-buddy rejected:', msg);
+                if (had && !buddiesCache.includes(nick)) {
+                    buddiesCache.push(nick);
+                    try { localStorage.setItem(buddyStorageKey(), JSON.stringify(buddiesCache)); } catch (_) {}
+                }
+                if (typeof setBuddyStatus === 'function') setBuddyStatus('Could not remove buddy: ' + msg);
+                if (lastUsersSnapshot && lastUsersSnapshot.length) updateActiveUsersList(lastUsersSnapshot);
+            }
+        })
+        .catch(err => {
+            console.warn('remove-buddy network error:', err);
+        });
 }
 // Last roster passed through updateActiveUsersList, so the buddy toggle can
 // re-render without re-fetching from the server.
@@ -818,9 +1059,11 @@ window.handleBuddyToggle = function (btn) {
     if (action === 'add') {
         addBuddy(nick);
         playSound('buddyin-sound');
+        if (typeof setBuddyStatus === 'function') setBuddyStatus(`Added ${nick} to your buddy list.`);
     } else {
         removeBuddyEntry(nick);
         playSound('buddyout-sound');
+        if (typeof setBuddyStatus === 'function') setBuddyStatus(`Removed ${nick} from your buddy list.`);
     }
     updateActiveUsersList(lastUsersSnapshot);
 };
@@ -923,24 +1166,54 @@ function updateActiveUsersList(users) {
     const userProfile = getUserProfile();
     const buddies = getBuddies();
 
-    // Sort: current user pinned to the top, then buddies (alphabetical),
-    // then everyone else (alphabetical). Mirrors classic AIM behavior.
-    const sorted = users.slice().sort((a, b) => {
-        if (a.nickname === userInfo.nickname) return -1;
-        if (b.nickname === userInfo.nickname) return 1;
-        const aB = buddies.includes(a.nickname);
-        const bB = buddies.includes(b.nickname);
-        if (aB !== bB) return aB ? -1 : 1;
-        return a.nickname.localeCompare(b.nickname);
-    });
+    // Split into Buddies (online buddies) and Online (everyone else).
+    // Current user is rendered as a small "Me" section at the bottom so
+    // the buddy/online lists read cleanly.
+    const me      = users.find(u => u.nickname === userInfo.nickname);
+    const others  = users.filter(u => u.nickname !== userInfo.nickname);
+    const sortByName = (a, b) => a.nickname.localeCompare(b.nickname);
+    const buddyRows  = others.filter(u => buddies.includes(u.nickname)).sort(sortByName);
+    const onlineRows = others.filter(u => !buddies.includes(u.nickname)).sort(sortByName);
 
-    activeUsersList.innerHTML = sorted.map(user => {
+    // Buddies the user has added but who aren't currently online — synthesized
+    // entries so the buddy list still shows them (greyed out).
+    const onlineNicks = new Set(others.map(u => u.nickname));
+    const offlineBuddyRows = buddies
+        .filter(n => n !== userInfo.nickname && !onlineNicks.has(n))
+        .sort()
+        .map(n => ({ nickname: n, status: 'offline', avatarColor: '#808080' }));
+
+    // For the unified renderer below, ordered: buddies online, buddies offline, everyone else, me.
+    const sorted = [].concat(
+        buddyRows.map(u => ({ ...u, __section: 'buddies' })),
+        offlineBuddyRows.map(u => ({ ...u, __section: 'buddies' })),
+        onlineRows.map(u => ({ ...u, __section: 'online' })),
+        me ? [{ ...me, __section: 'me' }] : []
+    );
+
+    // Build section headers inline so users get the classic AIM "Buddies / Online" split.
+    const html = [];
+    let lastSection = null;
+    const sectionLabel = {
+        buddies: `★ Buddies (${buddyRows.length + offlineBuddyRows.length})`,
+        online:  `Online (${onlineRows.length})`,
+        me:      'You'
+    };
+
+    sorted.forEach(user => {
+        // Emit a section header when the section changes.
+        if (user.__section !== lastSection) {
+            lastSection = user.__section;
+            html.push(`<div class="buddy-section-header buddy-section-${lastSection}">${sectionLabel[lastSection]}</div>`);
+        }
+
         const isCurrentUser = user.nickname === userInfo.nickname;
         const isBud = buddies.includes(user.nickname);
         const displayName = isCurrentUser ? userProfile.displayName : user.nickname;
         const avatarColor = isCurrentUser ? userProfile.avatarColor : (user.avatarColor || '#007BFF');
         const status = isCurrentUser ? userProfile.status : (user.status || 'online');
         const safeNick = escapeHtml(user.nickname);
+        const isOffline = status === 'offline';
 
         const buddyToggle = isCurrentUser ? '' : `
             <button class="buddy-toggle-btn"
@@ -953,25 +1226,30 @@ function updateActiveUsersList(users) {
             </button>
         `;
 
-        return `
-            <div class="active-user-item${isBud ? ' is-buddy' : ''}${isCurrentUser ? ' is-self' : ''}">
+        // Don't show a Message button for offline buddies — DMs can't be delivered.
+        const messageBtn = (!isCurrentUser && !isOffline) ? `
+            <button class="win95-button message-button" onclick="showDirectMessageWindow('${safeNick}')">
+                IM
+            </button>
+        ` : '';
+
+        html.push(`
+            <div class="active-user-item${isBud ? ' is-buddy' : ''}${isCurrentUser ? ' is-self' : ''}${isOffline ? ' is-offline' : ''}">
                 <div class="user-avatar" style="background-color: ${avatarColor}">
                     ${displayName.charAt(0).toUpperCase()}
                     <div class="user-status ${status}"></div>
                 </div>
                 <div class="user-info">
                     <div class="user-name">${escapeHtml(displayName)}${isCurrentUser ? ' (You)' : ''}</div>
-                    <div class="user-status-text">${isBud ? 'Buddy' : (status === 'offline' ? 'Offline' : 'Online')}</div>
+                    <div class="user-status-text">${isOffline ? 'Offline' : (isBud ? 'Buddy' : 'Online')}</div>
                 </div>
                 ${buddyToggle}
-                ${!isCurrentUser ? `
-                    <button class="win95-button message-button" onclick="showDirectMessageWindow('${safeNick}')">
-                        Message
-                    </button>
-                ` : ''}
+                ${messageBtn}
             </div>
-        `;
-    }).join('');
+        `);
+    });
+
+    activeUsersList.innerHTML = html.join('');
 }
 
 // Direct message functions
@@ -1239,6 +1517,10 @@ function initializeDesktop() {
     // returning user who skipped the splash still gets a desktop.
     setTimeout(() => { playSound('startup-sound', { force: true }); }, 250);
 
+    // Hydrate the buddy list from the SQLite backend. Falls back to the
+    // localStorage snapshot if the network is unreachable.
+    loadBuddiesFromBackend();
+
     // Initialize user list in the background immediately
     // This will make users visible faster when the Active Now window is opened
     setTimeout(() => {
@@ -1394,7 +1676,7 @@ function loadChatrooms() {
                         : '';
 
                     roomItem.innerHTML = `
-                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAALEwAACxMBAJqcGAAAAHlJREFUOE/tk8sNwCAMQ5mBDbJR2YQdWKDhU6mcohapPXHII1HiOKE55zxCCA/4zjnf931TnrsjhICc87vKzAIiAvfVdX4JiJmRUkLrFbJqALoMgoDWGlprWw2q6kO01qi1Ys4528A9KZPYj6QfKH6TOvH7PPj8gesNnXdJbzL2K3IHAAAAAElFTkSuQmCC" class="room-icon">
+                        <img src="images/chatrooms.png" class="room-icon" alt="">
                         <span class="room-name">${room.name}</span>
                         <span class="room-info">Created: ${formattedDate}</span>
                         ${adminControls}

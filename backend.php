@@ -129,6 +129,19 @@ try {
             $stmt->execute(['name' => $roomName]);
         }
     }
+
+    // Buddies table — created lazily (IF NOT EXISTS) so existing deployments
+    // get the table on first hit without a separate migration step.
+    // (owner, buddy_nickname) is unique so add-buddy is idempotent.
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS buddies (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            owner TEXT NOT NULL,
+            buddy_nickname TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(owner, buddy_nickname)
+        );
+    ");
     
     // Ensure the admin account exists AND its password matches the value
     // configured in .aim-env.php. If the row was pre-existing with a stale
@@ -159,7 +172,7 @@ try {
     $endpoint = isset($_GET['endpoint']) ? $_GET['endpoint'] : 'unknown';
 
     // Check if user is logged in for protected endpoints
-    $protectedEndpoints = ['create-room', 'delete-room', 'get-messages', 'save-message', 'active-users'];
+    $protectedEndpoints = ['create-room', 'delete-room', 'get-messages', 'save-message', 'active-users', 'buddies', 'add-buddy', 'remove-buddy'];
     if (in_array($endpoint, $protectedEndpoints)) {
         error_log('Protected endpoint requested: ' . $endpoint);
         error_log('Session data: ' . print_r($_SESSION, true));
@@ -563,6 +576,76 @@ try {
                 if ($db->inTransaction()) $db->rollBack();
                 http_response_code(500);
                 echo json_encode(['error' => 'Failed to delete room: ' . $e->getMessage()]);
+            }
+            break;
+
+        case 'buddies':
+            // List the current user's buddies (GET-safe, no CSRF needed).
+            $owner = $_SESSION['user']['username'];
+            $stmt = $db->prepare('SELECT buddy_nickname FROM buddies WHERE owner = :o ORDER BY buddy_nickname COLLATE NOCASE');
+            $stmt->execute(['o' => $owner]);
+            $buddies = array_map(fn($r) => $r['buddy_nickname'], $stmt->fetchAll(PDO::FETCH_ASSOC));
+            echo json_encode(['success' => true, 'buddies' => $buddies]);
+            break;
+
+        case 'add-buddy':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                break;
+            }
+            require_csrf();
+            $data = json_decode(file_get_contents('php://input'), true);
+            $nick = isset($data['nickname']) ? trim($data['nickname']) : '';
+            $owner = $_SESSION['user']['username'];
+            // Validation: non-empty, not yourself, reasonable length, no funky chars.
+            if ($nick === '') {
+                http_response_code(400);
+                echo json_encode(['error' => 'nickname is required']);
+                break;
+            }
+            if (mb_strlen($nick) > 64) {
+                http_response_code(400);
+                echo json_encode(['error' => 'nickname too long']);
+                break;
+            }
+            if (strcasecmp($nick, $owner) === 0) {
+                http_response_code(400);
+                echo json_encode(['error' => "You can't add yourself."]);
+                break;
+            }
+            try {
+                $stmt = $db->prepare('INSERT OR IGNORE INTO buddies (owner, buddy_nickname) VALUES (:o, :n)');
+                $stmt->execute(['o' => $owner, 'n' => $nick]);
+                echo json_encode(['success' => true, 'nickname' => $nick]);
+            } catch (PDOException $e) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to add buddy: ' . $e->getMessage()]);
+            }
+            break;
+
+        case 'remove-buddy':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                break;
+            }
+            require_csrf();
+            $data = json_decode(file_get_contents('php://input'), true);
+            $nick = isset($data['nickname']) ? trim($data['nickname']) : '';
+            $owner = $_SESSION['user']['username'];
+            if ($nick === '') {
+                http_response_code(400);
+                echo json_encode(['error' => 'nickname is required']);
+                break;
+            }
+            try {
+                $stmt = $db->prepare('DELETE FROM buddies WHERE owner = :o AND buddy_nickname = :n');
+                $stmt->execute(['o' => $owner, 'n' => $nick]);
+                echo json_encode(['success' => true, 'nickname' => $nick, 'removed' => $stmt->rowCount()]);
+            } catch (PDOException $e) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to remove buddy: ' . $e->getMessage()]);
             }
             break;
 

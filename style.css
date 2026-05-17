@@ -767,8 +767,10 @@ body {
 
 .room-icon {
     margin-right: 10px;
-    width: 16px;
-    height: 16px;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    image-rendering: -webkit-optimize-contrast;
 }
 
 .room-name {
@@ -2476,6 +2478,29 @@ select:focus,
     color: #000080;
     margin-bottom: 14px;
     letter-spacing: 0.02em;
+    width: 100%;
+    text-align: left;
+}
+
+/* Inside the sign-on / register windows the form rows fill the container
+   width — the legacy 280px max-width left ~80px of dead space on the right
+   of the 420px login window. */
+.login-window .form-group,
+.login-window .login-actions,
+.login-window .form-actions,
+.login-window .login-form,
+.login-window .register-form,
+.login-window #login-button,
+.login-window #show-register,
+.login-window #register-button,
+.login-window #show-login {
+    max-width: none;
+    width: 100%;
+}
+
+.login-window .login-form,
+.login-window .register-form {
+    align-items: stretch;
 }
 
 .form-group {
@@ -2487,12 +2512,15 @@ select:focus,
     color: #000;
     margin-bottom: 4px;
     font-weight: normal;
+    display: block;
 }
 
 .form-group input {
     height: 26px;
     font-size: 13px;
     padding: 3px 6px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .form-error {
@@ -2503,18 +2531,23 @@ select:focus,
     min-height: 16px;
 }
 
-/* Slim "remember me / forgot password" row look-alike — empty hook for future use. */
 .login-actions {
-    margin-top: 8px;
+    margin-top: 12px;
     gap: 8px;
+    display: flex;
 }
 
 .primary-button,
 .secondary-button {
-    height: 28px;
-    min-width: 96px;
+    height: 30px;
+    min-width: 0;
     font-size: 12px;
+    flex: 1 1 0;
 }
+
+/* Primary action takes more visual weight than the secondary toggle. */
+.primary-button { flex-grow: 2; }
+.secondary-button { flex-grow: 1; }
 
 /* ---- Dialogs ---- */
 .dialog {
@@ -2530,7 +2563,55 @@ select:focus,
     gap: 6px;
 }
 
-/* ---- Chat window refinements ---- */
+/* ---- Chat window layout ----
+   The chat & DM windows are flex columns so the messages area grows,
+   while .chat-status and .chat-input stay pinned at the bottom no matter
+   how tall the window is or how much history is loaded. Without this the
+   legacy `height: calc(100% - 60px)` on .chat-messages would push the
+   input + status bar below the visible window edge. */
+.chat-window .window-content,
+.direct-message-window .window-content {
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+    gap: 5px;
+    overflow: hidden;
+}
+
+.chat-window .chat-messages,
+.direct-message-window .dm-messages,
+.direct-message-window .chat-messages {
+    flex: 1 1 0;
+    height: auto;
+    min-height: 0;
+    margin-bottom: 0;
+    overflow-y: auto;
+}
+
+.chat-window .chat-status,
+.direct-message-window .chat-status {
+    flex: 0 0 auto;
+    height: auto;
+    min-height: 16px;
+    margin-bottom: 0;
+}
+
+.chat-window .chat-input,
+.direct-message-window .chat-input {
+    flex: 0 0 auto;
+    padding-right: 6px;
+}
+
+/* On desktop the window has a 16px resize handle in the bottom-right
+   corner; pad the chat input so the Send button doesn't sit underneath it. */
+@media (min-width: 1025px) {
+    .chat-window .chat-input,
+    .direct-message-window .chat-input {
+        padding-right: 22px;
+    }
+}
+
+/* ---- Chat window refinements (visual polish) ---- */
 .chat-messages,
 .dm-messages,
 .room-list,
@@ -2551,9 +2632,10 @@ select:focus,
 
 .chat-input {
     gap: 6px;
-    padding: 6px 6px 6px 6px;
+    padding: 6px;
     border-top: 1px solid #808080;
     box-shadow: inset 0 1px 0 #ffffff;
+    background: #c0c0c0;
 }
 
 .message-input {
@@ -2597,6 +2679,193 @@ select:focus,
     color: #5a4a00;
     font-style: italic;
     padding: 4px 8px;
+}
+
+/* ============================================================
+   BUDDY LIST WINDOW
+   ============================================================ */
+
+.buddy-list-window {
+    min-width: 250px;
+    min-height: 280px;
+}
+
+.buddy-list-content {
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+    gap: 4px;
+    overflow: hidden;
+}
+
+/* Toolbar with Add / Remove / Refresh */
+.buddy-toolbar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    background: #c0c0c0;
+    box-shadow:
+        inset  1px  1px 0 #ffffff,
+        inset -1px -1px 0 #808080;
+}
+
+.buddy-toolbar-spacer { flex: 1 1 auto; }
+
+.buddy-toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    padding: 3px 8px 3px 4px;
+    height: 28px;
+    font-size: 12px;
+}
+
+.buddy-toolbar-btn img {
+    width: 18px;
+    height: 18px;
+    image-rendering: -webkit-optimize-contrast;
+    pointer-events: none;
+}
+
+.win95-button.icon-only {
+    min-width: 0;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    font-size: 16px;
+    line-height: 1;
+}
+
+/* The scrollable buddy list takes the remaining vertical space. */
+.buddy-list-content .active-users-list {
+    flex: 1 1 0;
+    min-height: 0;
+    height: auto;
+    overflow-y: auto;
+    padding: 0;
+}
+
+/* Bottom statusbar (sunken strip) for buddy-add/remove feedback. */
+.buddy-statusbar {
+    flex: 0 0 auto;
+    background: #c0c0c0;
+    padding: 3px 8px;
+    font-size: 11px;
+    color: #404040;
+    min-height: 20px;
+    box-shadow:
+        inset  1px  1px 0 #808080,
+        inset -1px -1px 0 #ffffff;
+}
+
+/* Section headers inside the list (Buddies / Online / You). */
+.buddy-section-header {
+    padding: 6px 8px 4px;
+    font-size: 11px;
+    font-weight: bold;
+    color: #ffffff;
+    background: linear-gradient(to right, #316ac5 0%, #5b8dd6 100%);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+    letter-spacing: 0.04em;
+    border-top: 1px solid #1f4380;
+    border-bottom: 1px solid #1f4380;
+}
+
+.buddy-section-header.buddy-section-buddies {
+    background: linear-gradient(to right, #b89000 0%, #d4a800 100%);
+    border-color: #7c5f00;
+}
+
+.buddy-section-header.buddy-section-me {
+    background: linear-gradient(to right, #4a7c4a 0%, #6ba66b 100%);
+    border-color: #2e4e2e;
+}
+
+/* Tighter rows inside the buddy list (no horizontal padding so the
+   sunken list border doesn't double-up with row padding). */
+.buddy-list-content .active-user-item {
+    border-bottom: 0;
+    padding: 4px 8px;
+    gap: 8px;
+}
+
+.buddy-list-content .active-user-item:hover {
+    background: #d4e1f5;
+}
+
+.buddy-list-content .active-user-item.is-offline {
+    opacity: 0.55;
+}
+
+.buddy-list-content .active-user-item.is-offline .user-name {
+    color: #808080;
+}
+
+.buddy-list-content .active-user-item.is-offline .user-avatar {
+    filter: grayscale(0.8);
+}
+
+/* Compact "IM" button on each row. */
+.buddy-list-content .message-button {
+    min-width: 0;
+    width: 32px;
+    height: 22px;
+    padding: 0;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+/* ============================================================
+   BUDDY ADD / REMOVE DIALOGS
+   ============================================================ */
+
+.buddy-dialog {
+    /* Centered modal — uses .dialog base with explicit width. */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+}
+
+.buddy-dialog-body {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.buddy-dialog-icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    image-rendering: -webkit-optimize-contrast;
+    margin-top: 2px;
+}
+
+.buddy-dialog-form {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.buddy-dialog-prompt {
+    display: block;
+    font-size: 12px;
+    color: #000;
+    margin-bottom: 8px;
+    line-height: 1.35;
+}
+
+.buddy-dialog-form .win95-input,
+.buddy-dialog-form input.win95-input,
+.buddy-dialog-form select.win95-input {
+    width: 100%;
+    height: 26px;
+    font-size: 13px;
+    padding: 3px 6px;
 }
 
 /* ---- Buddy add/remove toggle (per-row icon button) ---- */
@@ -2674,56 +2943,87 @@ select:focus,
     color: #d6e2f5;
 }
 
-/* ---- Scrollbars: faux Win95 chrome (WebKit only — Firefox falls back to thin) ---- */
-.chat-messages::-webkit-scrollbar,
-.dm-messages::-webkit-scrollbar,
-.room-list::-webkit-scrollbar,
-.active-users-list::-webkit-scrollbar,
-.window-content::-webkit-scrollbar {
+/* ---- Scrollbars: faux Win95 chrome ----
+   Universal selector below covers every scrollable element in the app
+   (.chat-messages, .dm-messages, .room-list, .active-users-list,
+   .window-content, .profile-container, textarea, etc.) so nothing
+   slips through with a default native bar. Firefox falls back to the
+   thin scrollbar declared below. */
+::-webkit-scrollbar {
     width: 16px;
     height: 16px;
     background: #c0c0c0;
 }
 
-.chat-messages::-webkit-scrollbar-track,
-.dm-messages::-webkit-scrollbar-track,
-.room-list::-webkit-scrollbar-track,
-.active-users-list::-webkit-scrollbar-track,
-.window-content::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
+    background:
+        repeating-linear-gradient(45deg,
+            #d4d0c8 0 2px, #c0c0c0 2px 4px);
+    box-shadow:
+        inset  1px  0 0 #808080,
+        inset -1px  0 0 #ffffff;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c0c0c0;
+    box-shadow:
+        inset  1px  1px 0 #ffffff,
+        inset -1px -1px 0 #404040,
+        inset  2px  2px 0 #dfdfdf,
+        inset -2px -2px 0 #808080;
+    min-height: 24px;
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: #b8b8b8;
+}
+
+::-webkit-scrollbar-button {
+    background: #c0c0c0;
+    box-shadow:
+        inset  1px  1px 0 #ffffff,
+        inset -1px -1px 0 #404040,
+        inset  2px  2px 0 #dfdfdf,
+        inset -2px -2px 0 #808080;
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+::-webkit-scrollbar-button:active {
+    box-shadow:
+        inset  1px  1px 0 #404040,
+        inset -1px -1px 0 #ffffff,
+        inset  2px  2px 0 #808080,
+        inset -2px -2px 0 #dfdfdf;
+}
+
+/* Up / down / left / right arrow glyphs on the scroll buttons. */
+::-webkit-scrollbar-button:vertical:decrement {
+    background-image:
+        linear-gradient(45deg, transparent 45%, #000 45%, #000 55%, transparent 55%),
+        linear-gradient(-45deg, transparent 45%, #000 45%, #000 55%, transparent 55%);
+    background-size: 6px 6px, 6px 6px;
+    background-position: 50% 60%, 50% 60%;
+    background-repeat: no-repeat;
+}
+
+::-webkit-scrollbar-button:vertical:increment {
+    background-image:
+        linear-gradient(135deg, transparent 45%, #000 45%, #000 55%, transparent 55%),
+        linear-gradient(-135deg, transparent 45%, #000 45%, #000 55%, transparent 55%);
+    background-size: 6px 6px, 6px 6px;
+    background-position: 50% 40%, 50% 40%;
+    background-repeat: no-repeat;
+}
+
+::-webkit-scrollbar-corner {
     background:
         repeating-linear-gradient(45deg,
             #d4d0c8 0 2px, #c0c0c0 2px 4px);
 }
 
-.chat-messages::-webkit-scrollbar-thumb,
-.dm-messages::-webkit-scrollbar-thumb,
-.room-list::-webkit-scrollbar-thumb,
-.active-users-list::-webkit-scrollbar-thumb,
-.window-content::-webkit-scrollbar-thumb {
-    background: #c0c0c0;
-    box-shadow:
-        inset  1px  1px 0 #ffffff,
-        inset -1px -1px 0 #404040,
-        inset  2px  2px 0 #dfdfdf,
-        inset -2px -2px 0 #808080;
-}
-
-.chat-messages::-webkit-scrollbar-button,
-.dm-messages::-webkit-scrollbar-button,
-.room-list::-webkit-scrollbar-button,
-.active-users-list::-webkit-scrollbar-button,
-.window-content::-webkit-scrollbar-button {
-    background: #c0c0c0;
-    box-shadow:
-        inset  1px  1px 0 #ffffff,
-        inset -1px -1px 0 #404040,
-        inset  2px  2px 0 #dfdfdf,
-        inset -2px -2px 0 #808080;
-    width: 16px;
-    height: 16px;
-}
-
-* { scrollbar-width: thin; scrollbar-color: #808080 #c0c0c0; }
+* { scrollbar-width: auto; scrollbar-color: #808080 #c0c0c0; }
 
 /* ---- Profile / panels ---- */
 .profile-section {

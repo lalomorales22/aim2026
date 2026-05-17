@@ -618,15 +618,49 @@ function showProfileWindow() {
     showWindow('profile-window');
 }
 
+// Profile storage is scoped by signed-in nickname so multiple accounts
+// sharing the same browser don't bleed each other's profiles. The legacy
+// unscoped 'userProfile' key is migrated once on first read.
+function profileStorageKey() {
+    const me = (typeof userInfo !== 'undefined' && userInfo.nickname) ? userInfo.nickname : 'anon';
+    return 'aim_profile_' + me;
+}
+
 function getUserProfile() {
-    // Try to get profile from localStorage
-    const storedProfile = localStorage.getItem('userProfile');
-    
-    if (storedProfile) {
-        return JSON.parse(storedProfile);
+    const key = profileStorageKey();
+    let stored = localStorage.getItem(key);
+
+    // One-time migration: if we haven't saved a scoped profile yet but the
+    // legacy unscoped key exists AND it belongs to the current user, adopt
+    // it and remove the legacy. If the legacy belongs to a different user,
+    // leave it in place so that user's next sign-in can still migrate it —
+    // only delete it after a successful adoption to avoid wiping data.
+    if (!stored) {
+        const legacy = localStorage.getItem('userProfile');
+        if (legacy) {
+            try {
+                const p = JSON.parse(legacy);
+                if (p && (!p.displayName || p.displayName === userInfo.nickname)) {
+                    localStorage.setItem(key, legacy);
+                    stored = legacy;
+                    try { localStorage.removeItem('userProfile'); } catch (_) {}
+                }
+            } catch (_) { /* ignore malformed legacy */ }
+        }
     }
-    
-    // Return default profile if not found
+
+    if (stored) {
+        try {
+            const p = JSON.parse(stored);
+            // Defensive: if the stored displayName looks like a different
+            // account, fall back to the current nickname.
+            if (p && typeof p === 'object') {
+                if (!p.displayName) p.displayName = userInfo.nickname;
+                return p;
+            }
+        } catch (_) { /* fall through to default */ }
+    }
+
     return {
         displayName: userInfo.nickname,
         bio: 'I love chatting in Windows 95 style!',
@@ -638,8 +672,8 @@ function getUserProfile() {
 }
 
 function saveUserProfile(profile) {
-    localStorage.setItem('userProfile', JSON.stringify(profile));
-    
+    localStorage.setItem(profileStorageKey(), JSON.stringify(profile));
+
     // Send profile update to server
     if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({

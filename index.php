@@ -327,7 +327,8 @@ $isLoggedIn = isset($_SESSION['user']);
         // Store user info for WebSocket connection
         const userInfo = {
             nickname: "<?php echo htmlspecialchars($_SESSION['user']['username']); ?>",
-            id: <?php echo (int)$_SESSION['user']['id']; ?>
+            id: <?php echo (int)$_SESSION['user']['id']; ?>,
+            isAdmin: <?php echo $_SESSION['user']['username'] === 'lalopenguin' ? 'true' : 'false'; ?>
         };
         // Signed token the Node WS server verifies on `identify`.
         window.WS_TOKEN = "<?php echo htmlspecialchars(aim_mint_ws_token($_SESSION['user']['username']), ENT_QUOTES); ?>";

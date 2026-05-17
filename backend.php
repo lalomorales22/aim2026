@@ -28,6 +28,45 @@ function require_csrf() {
     }
 }
 
+// --- Moderation -----------------------------------------------------------
+// Admin is hard-coded by username — only this account can delete rooms via
+// the moderation endpoint. Keeping the check here (server-side) means a
+// tampered client can't grant itself the button.
+const ADMIN_USERNAME = 'lalopenguin';
+function is_admin($username) {
+    return $username === ADMIN_USERNAME;
+}
+
+// Rejects chatroom names that contain slurs. Normalizes whitespace,
+// punctuation, and common leet-speak substitutions, then substring-matches
+// against a small banned list. Conservative on purpose — a few false
+// positives are preferable to letting slurs through.
+function is_bad_room_name($name) {
+    $n = strtolower($name);
+    $n = strtr($n, [
+        '0' => 'o', '1' => 'i', '!' => 'i', '|' => 'i',
+        '3' => 'e', '4' => 'a', '@' => 'a',
+        '5' => 's', '$' => 's', '7' => 't', '8' => 'b',
+    ]);
+    // Strip anything that isn't a-z so spaced-out slurs ("n i g") collapse.
+    $n = preg_replace('/[^a-z]/', '', $n);
+    $banned = [
+        'nigger', 'nigga', 'niggr', 'nigro',
+        'faggot', 'fagot',
+        'kike',
+        'chink',
+        'spic', 'wetback',
+        'gook',
+        'coon',
+        'tranny',
+        'retard',
+    ];
+    foreach ($banned as $word) {
+        if (strpos($n, $word) !== false) return true;
+    }
+    return false;
+}
+
 // --- WS auth token --------------------------------------------------------
 // Mints an HMAC-signed token that the Node WS server verifies on `identify`.
 // PHP and Node share the secret via the WS_SECRET environment variable on
@@ -91,11 +130,27 @@ try {
         }
     }
     
+    // Ensure the admin account exists. Idempotent: skips when present.
+    // The bootstrap password comes from ADMIN_PASSWORD (set in .aim-env.php)
+    // — never hard-coded here so the public repo stays clean.
+    $adminCheck = $db->prepare('SELECT id FROM users WHERE username = :u');
+    $adminCheck->execute(['u' => ADMIN_USERNAME]);
+    if (!$adminCheck->fetch()) {
+        $adminPw = getenv('ADMIN_PASSWORD');
+        if ($adminPw) {
+            $insertAdmin = $db->prepare('INSERT INTO users (username, password) VALUES (:u, :p)');
+            $insertAdmin->execute([
+                'u' => ADMIN_USERNAME,
+                'p' => password_hash($adminPw, PASSWORD_BCRYPT),
+            ]);
+        }
+    }
+
     // Handle API requests
     $endpoint = isset($_GET['endpoint']) ? $_GET['endpoint'] : 'unknown';
-    
+
     // Check if user is logged in for protected endpoints
-    $protectedEndpoints = ['create-room', 'get-messages', 'save-message', 'active-users'];
+    $protectedEndpoints = ['create-room', 'delete-room', 'get-messages', 'save-message', 'active-users'];
     if (in_array($endpoint, $protectedEndpoints)) {
         error_log('Protected endpoint requested: ' . $endpoint);
         error_log('Session data: ' . print_r($_SESSION, true));
@@ -304,7 +359,14 @@ try {
                 echo json_encode(['error' => 'Room name is required']);
                 break;
             }
-            
+
+            if (is_bad_room_name($roomName)) {
+                error_log('Room name rejected by moderation filter: ' . $roomName);
+                http_response_code(400);
+                echo json_encode(['error' => 'That room name is not allowed.']);
+                break;
+            }
+
             try {
                 error_log('Attempting to insert room into database');
                 $stmt = $db->prepare('INSERT INTO rooms (name) VALUES (:name)');
@@ -449,6 +511,52 @@ try {
             ]);
             break;
             
+        case 'delete-room':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                break;
+            }
+            require_csrf();
+
+            if (!is_admin($_SESSION['user']['username'])) {
+                http_response_code(403);
+                echo json_encode(['error' => 'Admin only']);
+                break;
+            }
+
+            $data = json_decode(file_get_contents('php://input'), true);
+            $roomId = isset($data['room_id']) ? (int)$data['room_id'] : 0;
+            if ($roomId <= 0) {
+                http_response_code(400);
+                echo json_encode(['error' => 'room_id is required']);
+                break;
+            }
+
+            try {
+                $db->beginTransaction();
+                $delMsgs = $db->prepare('DELETE FROM messages WHERE room_id = :id');
+                $delMsgs->execute(['id' => $roomId]);
+                $msgRows = $delMsgs->rowCount();
+
+                $delRoom = $db->prepare('DELETE FROM rooms WHERE id = :id');
+                $delRoom->execute(['id' => $roomId]);
+                $roomRows = $delRoom->rowCount();
+                $db->commit();
+
+                echo json_encode([
+                    'success' => true,
+                    'deleted_room_id' => $roomId,
+                    'deleted_messages' => $msgRows,
+                    'deleted_rooms' => $roomRows,
+                ]);
+            } catch (PDOException $e) {
+                if ($db->inTransaction()) $db->rollBack();
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to delete room: ' . $e->getMessage()]);
+            }
+            break;
+
         default:
             http_response_code(404);
             echo json_encode(['error' => 'Endpoint not found']);

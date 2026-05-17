@@ -7,3 +7,7 @@
 // .user.ini's auto_prepend_file directive also loads it on hosts that honor
 // it, but the require is the authoritative path.
 putenv('WS_SECRET=replace_with_openssl_rand_hex_32_value');
+
+// Bootstrap password for the 'lalopenguin' admin account — only used to
+// create the row the first time. Existing accounts are not updated.
+putenv('ADMIN_PASSWORD=replace_with_a_strong_password');

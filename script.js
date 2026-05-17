@@ -1254,13 +1254,25 @@ function loadChatrooms() {
                     const roomDate = new Date(room.created_at);
                     const formattedDate = `${roomDate.toLocaleDateString()} ${roomDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
                     
+                    const adminControls = (typeof userInfo !== 'undefined' && userInfo.isAdmin)
+                        ? `<button class="room-delete-btn" title="Delete this chatroom" data-room-id="${room.id}" data-room-name="${room.name.replace(/"/g, '&quot;')}">×</button>`
+                        : '';
+
                     roomItem.innerHTML = `
                         <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAALEwAACxMBAJqcGAAAAHlJREFUOE/tk8sNwCAMQ5mBDbJR2YQdWKDhU6mcohapPXHII1HiOKE55zxCCA/4zjnf931TnrsjhICc87vKzAIiAvfVdX4JiJmRUkLrFbJqALoMgoDWGlprWw2q6kO01qi1Ys4528A9KZPYj6QfKH6TOvH7PPj8gesNnXdJbzL2K3IHAAAAAElFTkSuQmCC" class="room-icon">
                         <span class="room-name">${room.name}</span>
                         <span class="room-info">Created: ${formattedDate}</span>
+                        ${adminControls}
                     `;
-                    
-                    roomItem.addEventListener('click', () => openChatRoom(room));
+
+                    roomItem.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('room-delete-btn')) {
+                            e.stopPropagation();
+                            deleteChatroom(room.id, room.name);
+                            return;
+                        }
+                        openChatRoom(room);
+                    });
                     roomList.appendChild(roomItem);
                 });
             } else {
@@ -1323,6 +1335,31 @@ function createNewRoom() {
         // Play error sound
         playSound('error-sound');
     });
+}
+
+// Admin-only: delete a chatroom and all of its messages.
+function deleteChatroom(roomId, roomName) {
+    if (typeof userInfo === 'undefined' || !userInfo.isAdmin) return;
+    if (!confirm(`Delete chatroom "${roomName}"?\nAll messages in this room will be permanently removed.`)) {
+        return;
+    }
+    window.apiPost('delete-room', { room_id: roomId })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const openWin = document.getElementById(`chat-window-${roomId}`);
+                if (openWin) openWin.remove();
+                loadChatrooms();
+            } else {
+                alert(data.error || 'Could not delete room');
+                playSound('error-sound');
+            }
+        })
+        .catch(err => {
+            console.error('Error deleting room:', err);
+            alert('Error deleting room. Please try again.');
+            playSound('error-sound');
+        });
 }
 
 // Open a chat room

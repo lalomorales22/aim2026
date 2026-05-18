@@ -3923,11 +3923,20 @@ function showInfoDialog({ title = 'AIM Chat', message = '', okLabel = 'OK', onOk
     `;
     document.querySelector('.win95-container').appendChild(dlg);
     makeWindowsDraggable();
-    const close = () => { dlg.remove(); if (typeof onOk === 'function') onOk(); };
-    dlg.querySelector('.info-ok').onclick = close;
-    dlg.querySelector('.control-button.close').onclick = close;
+    // User-triggered close fires onOk (so callers can chain follow-up state).
+    const userClose = () => { dlg.remove(); if (typeof onOk === 'function') onOk(); };
+    dlg.querySelector('.info-ok').onclick = userClose;
+    dlg.querySelector('.control-button.close').onclick = userClose;
     dlg.style.display = 'flex';
     bringToFront(dlg);
+    // Return a handle so callers (e.g. the "Waiting for X to accept" flow)
+    // can dismiss the dialog programmatically when the event they were
+    // waiting on arrives. The programmatic close() deliberately skips onOk
+    // because the user didn't actually click anything.
+    return {
+        element: dlg,
+        close: () => { if (dlg.parentNode) dlg.remove(); },
+    };
 }
 
 // Renders the Challenge dropdown menu. Anchors below the triggering button.
@@ -4128,6 +4137,13 @@ function showOtherProfileWindow(nickname) {
     });
 }
 
+// Tracks outstanding "Waiting for X to accept" dialogs so they can be
+// auto-dismissed when the recipient responds. Keyed initially by
+// `pending:<opponent>|<gameType>` (we don't have the gameId until the
+// server's outbound-echo arrives), then re-keyed by the gameId in
+// handleGameInvite so handleGameAccept / handleGameDecline can find it.
+const aimPendingInviteDialogs = new Map();
+
 // Send a game_invite to the server. The server records the game, forwards
 // to the recipient, and drops a receipt in the DM thread (persisted to
 // SQLite via Phase 1.3 persistence).
@@ -4144,10 +4160,13 @@ function sendGameInvite(opponent, gameType) {
         gameType,
     }));
     playSound('challenge-sound');
-    showInfoDialog({
+    const handle = showInfoDialog({
         title: 'Challenge Sent',
         message: `Waiting for <b>${escapeHtml(opponent)}</b> to accept your ${escapeHtml(gameLabel(gameType))} challenge…`,
     });
+    // Store under a placeholder key until the outbound-echo brings us the
+    // server-minted gameId (usually within a frame or two).
+    aimPendingInviteDialogs.set(`pending:${opponent}|${gameType}`, handle);
 }
 
 function gameLabel(gameType) {
@@ -4365,10 +4384,19 @@ function setGameBoardMessage(gameId, html) {
 // ---------- WS event handlers (called from connectToWebSocket onmessage) ----
 
 function handleGameInvite(data) {
-    // Sender's own receipt — server echoes the invite back so the UI can show
-    // "waiting for X to accept". The showInfoDialog from sendGameInvite()
-    // already covers this so we just no-op here.
-    if (data.direction === 'outbound' || data.from === userInfo.nickname) return;
+    // Sender's own receipt — server echoes the invite back so we can rekey
+    // the pending-dialog entry from opponent+gameType (the only thing
+    // sendGameInvite knew) to the server-minted gameId. handleGameAccept /
+    // handleGameDecline then dismiss the dialog by gameId.
+    if (data.direction === 'outbound' || data.from === userInfo.nickname) {
+        const k = `pending:${data.to}|${data.gameType}`;
+        const handle = aimPendingInviteDialogs.get(k);
+        if (handle && data.gameId) {
+            aimPendingInviteDialogs.delete(k);
+            aimPendingInviteDialogs.set(data.gameId, handle);
+        }
+        return;
+    }
     showIncomingInviteDialog({
         from: data.from,
         gameType: data.gameType,
@@ -4377,6 +4405,14 @@ function handleGameInvite(data) {
 }
 
 function handleGameAccept(data) {
+    // Auto-dismiss the inviter's "Waiting for X to accept" dialog — the
+    // game window is about to open on top of it anyway, but leaving the
+    // dialog around forces the user to click OK to clear it.
+    const pending = aimPendingInviteDialogs.get(data.gameId);
+    if (pending) {
+        pending.close();
+        aimPendingInviteDialogs.delete(data.gameId);
+    }
     // Both players get this. Open the game window for both sides.
     const opponent = data.from === userInfo.nickname
         ? (data.players || []).find(p => p !== userInfo.nickname) || 'opponent'
@@ -4390,6 +4426,13 @@ function handleGameAccept(data) {
 }
 
 function handleGameDecline(data) {
+    // Auto-dismiss the inviter's "Waiting…" dialog before we replace it
+    // with the "Declined" one so they don't have to click two OKs.
+    const pending = aimPendingInviteDialogs.get(data.gameId);
+    if (pending) {
+        pending.close();
+        aimPendingInviteDialogs.delete(data.gameId);
+    }
     showInfoDialog({
         title: 'Challenge Declined',
         message: data.from

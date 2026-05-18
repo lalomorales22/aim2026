@@ -37,7 +37,8 @@ AIM '95-inspired chat. PHP frontend on Bluehost, Node WebSocket relay on Railway
 | --- | --- | --- |
 | `index.php`, `backend.php`, `script.js`, `style.css`, `images/`, `.htaccess` | **Bluehost** | Frontend, auth, REST endpoints, room/message persistence |
 | `chatrooms.db` | **Bluehost** | SQLite — gitignored; lives in `public_html`. **Never overwrite it from your local copy** — production has live user data. |
-| `server.js`, `package.json`, `package-lock.json`, `Procfile`, `nixpacks.toml`, `railway.json` | **Railway** | Node WebSocket relay + build config |
+| `server.js`, `lib/core.js`, `package.json`, `package-lock.json`, `Procfile`, `nixpacks.toml`, `railway.json` | **Railway** | Node WebSocket relay + build config |
+| `test/*.test.js` | **local only** | `npm test` runs `node --test test/*.test.js` — pure helpers from `lib/core.js`, no network |
 | `README.md`, `.gitignore` | **GitHub only** | Repo metadata |
 
 ## First-time setup
@@ -95,6 +96,22 @@ The PHP frontend mints HMAC-signed auth tokens; the Node WS server verifies them
    `.user.ini` changes are cached up to 5 minutes (`user_ini.cache_ttl`). After uploading, wait a few minutes or touch each PHP file to force a re-read.
 
 Until both sides have it, the system falls back to non-HMAC `".dev"` tokens (still works, but anyone who knows your Railway URL could spoof a connection). Server logs `WS_SECRET not set` on startup if missing.
+
+### 2b. Setting `BACKEND_API_TOKEN` (DM persistence + game receipts)
+
+Phase 1 of the games upgrade added a `dm_messages` table on Bluehost so DM
+history survives Railway redeploys. Railway calls back into `backend.php` to
+persist each DM — that call authenticates with a shared `BACKEND_API_TOKEN`
+header (separate from `WS_SECRET` since they protect different things).
+
+1. Generate a strong token: `openssl rand -hex 32`.
+2. **Railway** → service → *Variables* → add `BACKEND_API_TOKEN=<that value>`.
+3. **Bluehost** `.aim-env.php` → add `putenv('BACKEND_API_TOKEN=<that value>');` next to `WS_SECRET`. (See `.aim-env.example.php` for the template.)
+
+Until both sides have it, DMs still work in real time, but they won't persist —
+on every Railway redeploy the in-memory history resets. Server logs
+`BACKEND_API_TOKEN not set` on startup if missing; `backend.php` returns
+`503 internal auth not configured` to internal callers.
 
 > **Why `nixpacks.toml` exists.** Nixpacks (Railway's build system) auto-detects the repo's languages. Because this folder contains `index.php` + `backend.php` *and* `server.js`, Nixpacks tries to build a hybrid PHP+nginx+Node image, which fails with `error: undefined variable 'nodejs_24'` in the Nix derivation. The `nixpacks.toml` here forces `providers = ["node"]` and pins Node 22 so the build is Node-only. The `engines: 22.x` in `package.json` reinforces this. Don't remove them.
 

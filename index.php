@@ -102,6 +102,13 @@ $isLoggedIn = isset($_SESSION['user']);
                 <img src="images/chatrooms-icon-small.png" alt="Chatrooms">
                 <span id="active-rooms-count">0</span>
             </div>
+
+            <!-- Mailbox indicator (Phase 3.8). Badge shows unread count;
+                 click opens the Mail window. -->
+            <div class="taskbar-mailbox" id="taskbar-mailbox" title="You've got mail!">
+                <span class="taskbar-mailbox-icon">📬</span>
+                <span class="taskbar-mailbox-count" id="taskbar-mailbox-count">0</span>
+            </div>
             <?php endif; ?>
             <div class="taskbar-time" id="taskbar-time"></div>
         </div>
@@ -271,6 +278,50 @@ $isLoggedIn = isset($_SESSION['user']);
                     </div>
                 </div>
             </div>
+
+            <!-- Game Window Template (cloned by createGameWindow() in script.js).
+                 Phase 2 fills the .game-board region with per-game UI; Phase 1
+                 just establishes the chrome. See tasks.md §1.2. -->
+            <div class="window game-window" id="game-window-template" style="display: none;">
+                <div class="window-header">
+                    <div class="window-title">Game</div>
+                    <div class="window-controls">
+                        <button class="control-button minimize">-</button>
+                        <button class="control-button maximize">□</button>
+                        <button class="control-button close">×</button>
+                    </div>
+                </div>
+                <div class="window-content game-window-content">
+                    <div class="game-header">
+                        <div class="game-opponent">
+                            <div class="game-opponent-avatar"></div>
+                            <div class="game-opponent-info">
+                                <div class="game-opponent-name">Opponent</div>
+                                <div class="game-opponent-record">0W – 0L</div>
+                            </div>
+                        </div>
+                        <div class="game-status-chip">Waiting…</div>
+                    </div>
+                    <div class="game-board">
+                        <!-- Per-game UI lands here; Phase 1 default copy: -->
+                        <div class="game-board-empty">
+                            This game window is part of the Phase 1 scaffolding.<br>
+                            Game boards land here in Phase 2.
+                        </div>
+                    </div>
+                    <div class="game-chat">
+                        <div class="game-chat-messages"></div>
+                        <div class="game-chat-input">
+                            <input type="text" class="message-input game-chat-text" placeholder="Trash talk…" maxlength="500">
+                            <button class="win95-button game-chat-send">Send</button>
+                        </div>
+                    </div>
+                    <div class="game-actions">
+                        <button class="win95-button game-resign-btn">Resign</button>
+                        <button class="win95-button game-rematch-btn" disabled>Rematch</button>
+                    </div>
+                </div>
+            </div>
         <?php endif; ?>
     </div>
     
@@ -285,6 +336,13 @@ $isLoggedIn = isset($_SESSION['user']);
     <audio id="buddyin-sound"    preload="auto"><source src="sounds/buddyin.wav"    type="audio/wav"></audio>
     <audio id="buddyout-sound"   preload="auto"><source src="sounds/buddyout.wav"   type="audio/wav"></audio>
     <audio id="filedone-sound"   preload="auto"><source src="sounds/filedone.wav"   type="audio/wav"></audio>
+    <!-- Game sounds (Phase 1 scaffolding — placeholder synth WAVs; swap in
+         period-correct AIM/AOL sounds when you have them). -->
+    <audio id="challenge-sound"  preload="auto"><source src="sounds/challenge.wav"  type="audio/wav"></audio>
+    <audio id="gamewin-sound"    preload="auto"><source src="sounds/gamewin.wav"    type="audio/wav"></audio>
+    <audio id="gameloss-sound"   preload="auto"><source src="sounds/gameloss.wav"   type="audio/wav"></audio>
+    <audio id="gamemove-sound"   preload="auto"><source src="sounds/gamemove.wav"   type="audio/wav"></audio>
+    <audio id="gametie-sound"    preload="auto"><source src="sounds/gametie.wav"    type="audio/wav"></audio>
     
     <script>
         // WebSocket host for the Railway-hosted realtime server.

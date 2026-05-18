@@ -1354,6 +1354,10 @@ body {
     color: white;
     font-weight: bold;
     border: 1px solid #000;
+    /* Deliberately NOT overflow:hidden — the .user-status dot is positioned
+       absolute in the bottom-right "corner" outside the circle, and we
+       want it visible. The avatar <img> is clipped to a circle by its own
+       border-radius:50%, so it can't hide the parent's circular border. */
 }
 
 .user-avatar:after {
@@ -3144,4 +3148,1507 @@ select:focus,
     .win95-button {
         border: 2px solid CanvasText;
     }
+}
+
+/* ============================================================================
+   Games — Phase 1 scaffolding (game window template, challenge UI, dialogs).
+   Phase 2 will add per-game board styles (tic-tac-toe grid, RPS buttons,
+   board winning-line animations) inside this same section.
+   ========================================================================== */
+
+/* Game window template. Slightly chunkier than chat — these are meant to
+   feel like a fullscreen activity, not a sidebar tab. */
+.game-window {
+    background-color: #c0c0c0;
+    min-width: 380px;
+    min-height: 440px;
+}
+
+.game-window .window-content,
+.game-window-content {
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 22px);
+    padding: 6px;
+    gap: 6px;
+}
+
+/* Header strip — opponent avatar + name + record on the left, game status
+   chip on the right. Borrows the inset/outset look from the rest of Win95. */
+.game-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    background-color: #d4d0c8;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+}
+
+.game-opponent {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.game-opponent-avatar {
+    width: 32px;
+    height: 32px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    background-color: #007BFF;
+    color: #fff;
+    font-weight: bold;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+}
+
+.game-opponent-name {
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.game-opponent-record {
+    font-size: 10px;
+    color: #404040;
+}
+
+/* The "Waiting…" / "Your turn" / "Game Over" pill. */
+.game-status-chip {
+    padding: 3px 10px;
+    background-color: #fff;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+/* Board region — Phase 2 paints per-game UI here. The empty-state class
+   handles the Phase 1 placeholder copy and the game-over result message. */
+.game-board {
+    flex: 1 1 auto;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    overflow: auto;
+}
+
+.game-board-empty {
+    text-align: center;
+    color: #606060;
+    font-size: 12px;
+    padding: 16px;
+    line-height: 1.5;
+}
+
+/* In-game chat strip below the board — keeps banter contained to this game. */
+.game-chat {
+    display: flex;
+    flex-direction: column;
+    height: 110px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    background-color: #fff;
+}
+
+.game-chat-messages {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 4px 6px;
+    font-size: 11px;
+}
+
+.game-chat-line {
+    padding: 1px 0;
+}
+
+.game-chat-from {
+    font-weight: bold;
+    color: #000080;
+    margin-right: 4px;
+}
+
+.game-chat-input {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background-color: #d4d0c8;
+    border-top: 1px solid #808080;
+}
+
+.game-chat-input input {
+    flex: 1 1 auto;
+}
+
+.game-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    padding-top: 2px;
+}
+
+/* Challenge button (in buddy list rows and DM window toolbars). */
+.challenge-button {
+    font-size: 10px;
+    padding: 2px 6px;
+    margin-left: 4px;
+}
+
+.dm-toolbar {
+    display: flex;
+    align-items: center;
+    padding: 4px 6px;
+    background-color: #d4d0c8;
+    border-bottom: 1px solid #808080;
+}
+
+.dm-toolbar .win95-button {
+    font-size: 11px;
+}
+
+/* The dropdown that appears when you click the Challenge button. */
+.challenge-menu {
+    background-color: #c0c0c0;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    padding: 2px;
+    min-width: 180px;
+}
+
+.challenge-menu-item {
+    padding: 4px 12px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.challenge-menu-item:hover {
+    background-color: #000080;
+    color: #fff;
+}
+
+/* Generic info dialog (Coming Soon, incoming challenge accept/decline). */
+.info-dialog,
+.game-invite-dialog {
+    background-color: #c0c0c0;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, 0);
+}
+
+.info-dialog-body {
+    padding: 14px 16px;
+    font-size: 12px;
+    line-height: 1.5;
+    background-color: #fff;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    margin: 8px;
+}
+
+/* ----- Game-over banner ----- */
+.game-over-banner {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(255, 255, 255, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    animation: gameOverFade 0.3s ease-out;
+}
+
+.game-over-text {
+    font-size: 22px;
+    font-weight: bold;
+    color: #000080;
+    text-shadow: 1px 1px 0 #fff, 2px 2px 0 #808080;
+    text-align: center;
+    padding: 12px 24px;
+    background-color: #c0c0c0;
+    border: 2px solid;
+    border-color: #fff #000 #000 #fff;
+}
+
+@keyframes gameOverFade {
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+.game-board { position: relative; }
+
+/* ============================================================================
+   Tic Tac Toe board
+   ========================================================================== */
+
+.ttt-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+}
+
+.ttt-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 76px);
+    grid-template-rows:    repeat(3, 76px);
+    gap: 4px;
+    background-color: #808080;
+    padding: 4px;
+    border: 2px solid;
+    border-color: #808080 #fff #fff #808080;
+}
+
+.ttt-cell {
+    background-color: #c0c0c0;
+    border: 2px solid;
+    border-color: #fff #000 #000 #fff;
+    font-family: 'MS Sans Serif', sans-serif;
+    font-size: 42px;
+    font-weight: bold;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.1s;
+}
+
+.ttt-cell:not([disabled]):hover {
+    background-color: #d4d0c8;
+}
+
+.ttt-cell:not([disabled]):active {
+    border-color: #000 #fff #fff #000;
+}
+
+.ttt-cell[disabled] {
+    cursor: default;
+}
+
+.ttt-cell-x { color: #0000a0; }
+.ttt-cell-o { color: #a00000; }
+
+.ttt-cell-winning {
+    background-color: #ffff80 !important;
+    animation: tttWin 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes tttWin {
+    from { background-color: #ffff80; }
+    to   { background-color: #ffd040; }
+}
+
+.ttt-legend {
+    font-size: 11px;
+    color: #404040;
+    text-align: center;
+}
+
+/* ============================================================================
+   Rock Paper Scissors board
+   ========================================================================== */
+
+.rps-wrap {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 10px;
+}
+
+.rps-scoreboard {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    background-color: #d4d0c8;
+    margin-bottom: 12px;
+}
+
+.rps-score-chip {
+    font-weight: bold;
+    padding: 3px 10px;
+    border: 1px solid;
+    border-color: #fff #808080 #808080 #fff;
+    background-color: #fff;
+    font-size: 12px;
+    min-width: 80px;
+    text-align: center;
+}
+
+.rps-me { color: #000080; }
+.rps-them { color: #800000; }
+
+.rps-round {
+    font-size: 11px;
+    color: #404040;
+    font-weight: bold;
+}
+
+.rps-stage {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.rps-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.rps-buttons-disabled .rps-button { opacity: 0.5; cursor: default; }
+
+.rps-button {
+    background-color: #c0c0c0;
+    border: 2px solid;
+    border-color: #fff #000 #000 #fff;
+    width: 90px;
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: transform 0.08s;
+}
+
+.rps-button:not([disabled]):hover {
+    background-color: #d4d0c8;
+    transform: translateY(-2px);
+}
+
+.rps-button:not([disabled]):active {
+    border-color: #000 #fff #fff #000;
+    transform: translateY(0);
+}
+
+.rps-button[disabled] { cursor: default; }
+
+.rps-icon {
+    font-size: 38px;
+    line-height: 1;
+}
+
+.rps-label {
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.rps-opp-status {
+    font-size: 12px;
+    color: #404040;
+    margin-bottom: 4px;
+}
+
+.rps-wait, .rps-reveal {
+    text-align: center;
+    padding: 16px 8px;
+    animation: rpsAppear 0.25s ease-out;
+}
+
+@keyframes rpsAppear {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.rps-wait-msg {
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+.rps-wait-sub {
+    font-size: 11px;
+    color: #606060;
+}
+
+.rps-shoot {
+    font-size: 14px;
+    margin-bottom: 14px;
+    color: #000080;
+}
+
+.rps-reveal-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    margin: 8px 0 14px;
+}
+
+.rps-reveal-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.rps-reveal-label {
+    font-size: 11px;
+    color: #404040;
+    margin-bottom: 4px;
+}
+
+.rps-reveal-pick {
+    font-size: 56px;
+    line-height: 1;
+    animation: rpsPickIn 0.4s ease-out;
+}
+
+@keyframes rpsPickIn {
+    0%   { transform: scale(0.4) rotate(-12deg); opacity: 0; }
+    60%  { transform: scale(1.15) rotate(4deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0); }
+}
+
+.rps-reveal-vs {
+    font-weight: bold;
+    color: #808080;
+    font-size: 18px;
+}
+
+.rps-reveal-result {
+    font-weight: bold;
+    font-size: 14px;
+    color: #000080;
+}
+
+/* ============================================================================
+   Profile stats panel
+   ========================================================================== */
+
+.profile-stats {
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    background-color: #fff;
+    padding: 6px 10px;
+}
+
+.profile-stats-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+    font-size: 12px;
+}
+
+.profile-stats-row + .profile-stats-row {
+    border-top: 1px dotted #c0c0c0;
+}
+
+.profile-stats-label {
+    font-weight: bold;
+}
+
+.profile-stats-record {
+    display: flex;
+    gap: 10px;
+}
+
+.stat-w { color: #006400; font-weight: bold; }
+.stat-l { color: #800000; }
+.stat-d { color: #808080; }
+
+.profile-stats-empty {
+    font-style: italic;
+    color: #606060;
+    text-align: center;
+    padding: 8px;
+}
+
+/* ============================================================================
+   Phase 3 — chat toolbar (smileys + formatting)
+   ========================================================================== */
+
+.chat-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px 4px;
+    background-color: #d4d0c8;
+    border-top: 1px solid #808080;
+    border-bottom: 1px solid #808080;
+}
+
+.format-btn {
+    background-color: #c0c0c0;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    width: 22px;
+    height: 22px;
+    line-height: 18px;
+    padding: 0;
+    font-family: 'MS Sans Serif', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.format-btn:active,
+.format-btn.active {
+    border-color: #000 #fff #fff #000;
+    background-color: #b8b4ac;
+}
+
+.smiley-trigger {
+    font-size: 14px;
+}
+
+.format-color {
+    width: 24px;
+    height: 22px;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    padding: 1px;
+    background-color: #c0c0c0;
+    cursor: pointer;
+}
+
+.format-font {
+    height: 22px;
+    font-size: 10px;
+    padding: 1px 2px;
+}
+
+/* Smiley popover */
+.smiley-picker {
+    background-color: #c0c0c0;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    padding: 4px;
+    display: grid;
+    grid-template-columns: repeat(6, 26px);
+    gap: 2px;
+}
+
+.smiley-picker-item {
+    width: 26px;
+    height: 26px;
+    line-height: 24px;
+    border: 1px solid transparent;
+    background-color: transparent;
+    font-size: 16px;
+    cursor: pointer;
+    text-align: center;
+    padding: 0;
+}
+
+.smiley-picker-item:hover {
+    background-color: #000080;
+    border-color: #000;
+}
+
+/* Inline smiley render */
+.smiley {
+    display: inline-block;
+    font-size: 1.15em;
+    line-height: 1;
+    vertical-align: -2px;
+}
+
+/* ============================================================================
+   Phase 3 — auto-reply visual cue
+   ========================================================================== */
+
+.message.auto-reply {
+    background-color: #fffce0;
+    border-left: 3px solid #c0a040;
+    padding-left: 6px;
+}
+
+.auto-reply-tag {
+    display: inline-block;
+    background-color: #c0a040;
+    color: #fff;
+    font-size: 9px;
+    font-weight: bold;
+    padding: 1px 5px;
+    margin: 0 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ============================================================================
+   Phase 3 — clickable nicknames + other-profile window
+   ========================================================================== */
+
+.clickable-nick {
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.clickable-nick:hover {
+    text-decoration: underline;
+    color: #000080;
+}
+
+.other-profile-window {
+    background-color: #c0c0c0;
+}
+
+.other-profile-body {
+    padding: 10px 12px;
+}
+
+.other-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #808080;
+}
+
+.other-profile-avatar {
+    width: 56px;
+    height: 56px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: bold;
+    font-size: 28px;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+    overflow: hidden;
+}
+
+.other-profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    image-rendering: pixelated;
+}
+
+.other-profile-name { font-weight: bold; font-size: 14px; }
+.other-profile-nickname { font-size: 11px; color: #404040; }
+.other-profile-status { font-size: 11px; margin-top: 4px; font-weight: bold; }
+.other-profile-status.status-online    { color: #006400; }
+.other-profile-status.status-away      { color: #b08000; }
+.other-profile-status.status-offline   { color: #808080; }
+.other-profile-status.status-invisible { color: #404040; font-style: italic; }
+
+.other-profile-section {
+    margin-top: 10px;
+}
+
+.other-profile-section-label {
+    font-size: 10px;
+    font-weight: bold;
+    color: #000080;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+
+.other-profile-bio,
+.other-profile-away-text {
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    background-color: #fff;
+    padding: 6px 8px;
+    min-height: 30px;
+    font-size: 12px;
+}
+
+.other-profile-away {
+    background-color: #fffce0;
+    border-left: 3px solid #c0a040;
+    padding: 6px 8px;
+    margin: 8px 0;
+    font-size: 12px;
+}
+
+.other-profile-actions {
+    display: flex;
+    gap: 6px;
+    padding: 8px;
+    background-color: #d4d0c8;
+    border-top: 1px solid #808080;
+    justify-content: flex-end;
+}
+
+/* ============================================================================
+   Phase 3 — buddy signs-on toast
+   ========================================================================== */
+
+.buddy-toast {
+    position: fixed;
+    right: 12px;
+    bottom: 36px;
+    width: 260px;
+    background-color: #fffbe6;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 99999;
+    animation: buddyToastIn 0.25s ease-out;
+}
+
+.buddy-toast-leaving {
+    animation: buddyToastOut 0.25s ease-in forwards;
+}
+
+@keyframes buddyToastIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+}
+@keyframes buddyToastOut {
+    from { transform: translateX(0); opacity: 1; }
+    to   { transform: translateX(110%); opacity: 0; }
+}
+
+.buddy-toast-avatar {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #808080;
+    background-color: #007BFF;
+    color: #fff;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+    font-size: 14px;
+}
+
+.buddy-toast-title { font-weight: bold; font-size: 12px; }
+.buddy-toast-sub   { font-size: 10px; color: #606060; }
+.buddy-toast-off .buddy-toast-avatar { opacity: 0.45; }
+
+/* ============================================================================
+   Phase 3 — buddy icon picker
+   ========================================================================== */
+
+.avatar-icon-preview {
+    width: 64px;
+    height: 64px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    background-color: #c0c0c0;
+    margin: 6px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.avatar-icon-preview img {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    object-fit: cover;
+}
+
+.avatar-icon-placeholder {
+    font-weight: bold;
+    font-size: 32px;
+    color: #606060;
+}
+
+.avatar-icon-actions {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.avatar-icon-actions .win95-button {
+    position: relative;
+    cursor: pointer;
+}
+
+.avatar-preset-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 36px);
+    gap: 3px;
+    padding: 4px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    background-color: #fff;
+    margin-top: 4px;
+}
+
+.avatar-preset {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #c0c0c0;
+    padding: 0;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.avatar-preset:hover {
+    border-color: #000080;
+    box-shadow: 0 0 0 1px #000080;
+}
+
+.avatar-preset img {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+}
+
+.user-avatar-img {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    object-fit: cover;
+    /* Match the parent's circular clip explicitly too, so the avatar still
+       looks round even in older browsers / forced-colors mode where
+       overflow:hidden + border-radius doesn't always compose. */
+    border-radius: 50%;
+    display: block;
+}
+
+/* Game opponent avatar can now hold an <img>, so make its overflow honest. */
+.game-opponent-avatar { overflow: hidden; }
+.game-opponent-avatar img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    image-rendering: pixelated;
+}
+
+/* ============================================================================
+   Phase 3 — mailbox + mail window
+   ========================================================================== */
+
+.taskbar-mailbox {
+    display: flex;
+    align-items: center;
+    margin-left: 5px;
+    padding: 2px 6px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    font-size: 11px;
+    background-color: #d4d0c8;
+    cursor: pointer;
+    gap: 4px;
+}
+
+.taskbar-mailbox:hover { background-color: #e0e0e0; }
+
+.taskbar-mailbox.has-mail {
+    background-color: #ffefa0;
+    animation: mailboxPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes mailboxPulse {
+    0%, 100% { background-color: #ffefa0; }
+    50%      { background-color: #ffd84d; }
+}
+
+.taskbar-mailbox-icon { font-size: 14px; line-height: 1; }
+.taskbar-mailbox-count { font-weight: bold; min-width: 12px; text-align: center; }
+
+.mail-window-content {
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 22px);
+    padding: 0;
+}
+
+.mail-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    background-color: #fff;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    margin: 6px;
+}
+
+.mail-empty {
+    text-align: center;
+    color: #606060;
+    font-style: italic;
+    padding: 24px;
+}
+
+.mail-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.mail-row:hover { background-color: #f0f0e0; }
+
+.mail-row-avatar {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #808080;
+    background-color: #007BFF;
+    color: #fff;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+    flex-shrink: 0;
+}
+
+.mail-row-body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.mail-row-sender { font-weight: bold; font-size: 12px; }
+.mail-row-preview {
+    font-size: 11px;
+    color: #404040;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.mail-row-meta { font-size: 10px; color: #808080; margin-top: 2px; }
+
+/* ============================================================================
+   Phase 3 — minor: form-hint helper, used in profile away message + avatar
+   ========================================================================== */
+
+.form-hint {
+    font-size: 10px;
+    color: #606060;
+    margin-top: 4px;
+}
+
+.form-hint a {
+    color: #000080;
+    text-decoration: underline;
+}
+
+/* ============================================================================
+   Phase 4 — Connect Four
+   ========================================================================== */
+
+.c4-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px;
+    gap: 6px;
+}
+
+.c4-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 40px);
+    grid-auto-rows: 40px;
+    gap: 3px;
+    background-color: #2040b0;
+    padding: 6px;
+    border: 2px solid;
+    border-color: #808080 #fff #fff #808080;
+}
+
+.c4-drop {
+    background-color: #c0c0c0;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.c4-drop:not([disabled]):hover { background-color: #d4d0c8; }
+.c4-drop:not([disabled]):active { border-color: #000 #fff #fff #000; }
+.c4-drop[disabled] { cursor: default; opacity: 0.4; }
+
+.c4-cell {
+    background-color: #fff;
+    border-radius: 50%;
+    border: 2px solid #2040b0;
+}
+
+.c4-cell-r { background-color: #e02040; box-shadow: inset -4px -4px 0 #80101e; }
+.c4-cell-y { background-color: #ffd84d; box-shadow: inset -4px -4px 0 #b08800; }
+
+.c4-cell-winning {
+    animation: c4WinPulse 0.7s ease-in-out infinite alternate;
+}
+@keyframes c4WinPulse {
+    from { transform: scale(1); }
+    to   { transform: scale(1.15); }
+}
+
+.c4-legend { font-size: 11px; color: #404040; text-align: center; }
+.c4-r { color: #c01030; font-weight: bold; }
+.c4-y { color: #b08800; font-weight: bold; }
+
+/* ============================================================================
+   Phase 4 — Hangman
+   ========================================================================== */
+
+.hangman-wrap {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.hangman-title {
+    font-size: 13px;
+    margin: 0;
+    color: #000080;
+}
+
+.hangman-help { font-size: 11px; color: #404040; text-align: center; margin: 0; }
+
+.hangman-word-input {
+    width: 240px;
+    padding: 3px 6px;
+    font-size: 14px;
+}
+
+.hangman-gallows {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.15;
+    background-color: #fff;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    padding: 6px 12px;
+    margin: 0;
+    color: #000;
+}
+
+.hangman-word-display {
+    display: flex;
+    gap: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 22px;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.hangman-char {
+    min-width: 14px;
+    border-bottom: 2px solid #000;
+    text-align: center;
+    padding: 0 2px;
+}
+
+.hangman-char-hidden { color: transparent; }
+
+.hangman-meta { font-size: 11px; color: #404040; text-align: center; }
+
+.hangman-wrong-list {
+    font-weight: bold;
+    color: #c01030;
+    letter-spacing: 4px;
+}
+
+.hangman-keyboard {
+    display: grid;
+    grid-template-columns: repeat(13, 22px);
+    gap: 3px;
+    margin-top: 6px;
+}
+
+.hangman-key {
+    background-color: #c0c0c0;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    height: 22px;
+    line-height: 18px;
+    padding: 0;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.hangman-key:not([disabled]):hover { background-color: #d4d0c8; }
+.hangman-key:not([disabled]):active { border-color: #000 #fff #fff #000; }
+.hangman-key[disabled] { cursor: default; }
+.hangman-key-correct { background-color: #c4e8c4 !important; color: #006400; }
+.hangman-key-wrong   { background-color: #e8c4c4 !important; color: #800000; }
+
+.hangman-picker-note { font-size: 11px; color: #606060; }
+
+/* ============================================================================
+   Phase 4 — Start menu additions
+   ========================================================================== */
+
+.start-menu-emoji {
+    display: inline-block;
+    width: 18px;
+    text-align: center;
+    margin-right: 6px;
+}
+
+/* ============================================================================
+   Phase 4 — Magic 8-Ball
+   ========================================================================== */
+
+.magic8ball-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: calc(100% - 22px);
+    gap: 16px;
+    padding: 16px;
+}
+
+.magic8ball-ball {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #404040 0%, #000 60%, #000 100%);
+    box-shadow:
+        inset -8px -10px 24px rgba(0,0,0,0.6),
+        inset 12px 14px 24px rgba(255,255,255,0.06),
+        4px 4px 12px rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.magic8ball-window-inner {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, #001050 0%, #000020 100%);
+    border: 2px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    text-align: center;
+}
+
+.magic8ball-answer {
+    color: #fff;
+    font-weight: bold;
+    font-size: 11px;
+    padding: 6px;
+    transition: opacity 0.3s;
+    text-shadow: 0 0 8px rgba(255,255,255,0.5);
+}
+
+.magic8ball-shaking {
+    animation: magic8ballShake 0.6s ease-in-out;
+}
+
+@keyframes magic8ballShake {
+    0%, 100% { transform: translate(0, 0) rotate(0); }
+    20%      { transform: translate(-6px, 4px) rotate(-3deg); }
+    40%      { transform: translate(6px, -4px) rotate(3deg); }
+    60%      { transform: translate(-4px, 6px) rotate(-2deg); }
+    80%      { transform: translate(4px, -6px) rotate(2deg); }
+}
+
+.magic8ball-help { font-size: 11px; color: #404040; text-align: center; margin: 0; }
+
+/* ============================================================================
+   Phase 4 — Snake
+   ========================================================================== */
+
+.snake-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px;
+    gap: 6px;
+}
+
+.snake-hud {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 2px 6px;
+    background-color: #d4d0c8;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+#snake-canvas {
+    background-color: #000;
+    border: 2px solid;
+    border-color: #808080 #fff #fff #808080;
+    image-rendering: pixelated;
+    outline: none;
+}
+
+.snake-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+    padding: 0 4px;
+}
+
+.snake-status { font-size: 11px; color: #404040; flex: 1; }
+
+/* ============================================================================
+   Phase 4 — Spectate Games
+   ========================================================================== */
+
+.spectate-content {
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 22px);
+    padding: 0;
+}
+
+.spectate-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    background-color: #fff;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    margin: 6px;
+}
+
+.spectate-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.spectate-row:hover { background-color: #f0f0e0; }
+
+.spectate-row-icon { font-size: 22px; flex-shrink: 0; }
+.spectate-row-title { font-weight: bold; font-size: 12px; }
+.spectate-row-players { font-size: 11px; color: #404040; }
+
+/* ============================================================================
+   Phase 4 — Leaderboard
+   ========================================================================== */
+
+.leaderboard-content {
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 22px);
+    padding: 6px;
+}
+
+.leaderboard-tabs {
+    display: flex;
+    gap: 2px;
+    border-bottom: 1px solid #808080;
+    padding-bottom: 0;
+}
+
+.leaderboard-tab {
+    background-color: #c0c0c0;
+    border: 1px solid;
+    border-color: #fff #808080 #c0c0c0 #fff;
+    padding: 4px 12px;
+    cursor: pointer;
+    font-family: 'MS Sans Serif', sans-serif;
+    font-size: 11px;
+    border-bottom: none;
+    position: relative;
+    top: 1px;
+}
+
+.leaderboard-tab.active {
+    background-color: #fff;
+    font-weight: bold;
+    z-index: 2;
+}
+
+.leaderboard-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    background-color: #fff;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    border-top: none;
+}
+
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+}
+
+.leaderboard-table th {
+    background-color: #d4d0c8;
+    padding: 4px 6px;
+    text-align: left;
+    border-bottom: 1px solid #808080;
+    position: sticky;
+    top: 0;
+}
+
+.leaderboard-table td {
+    padding: 4px 6px;
+    border-bottom: 1px dotted #e0e0e0;
+}
+
+.leaderboard-rank { font-weight: bold; min-width: 32px; }
+.leaderboard-row-me { background-color: #fff8d0; font-weight: bold; }
+
+/* ============================================================================
+   Phase 4 — Wallpapers (CSS-only — no image assets)
+   ========================================================================== */
+
+body[data-wallpaper="bliss"] .desktop {
+    background-color: #6cba49;
+    background-image:
+        linear-gradient(to bottom, #4a90e2 0%, #4a90e2 45%, #5fb13b 55%, #4d9230 100%);
+}
+
+body[data-wallpaper="forest"] .desktop {
+    background-color: #1a4a1a;
+    background-image:
+        radial-gradient(ellipse at top, #2d6b2d 0%, #143614 70%);
+}
+
+body[data-wallpaper="clouds"] .desktop {
+    background-color: #7bb0e0;
+    background-image:
+        radial-gradient(ellipse 220px 80px at 20% 30%, #fff 0%, transparent 70%),
+        radial-gradient(ellipse 300px 100px at 65% 60%, #fff 0%, transparent 70%),
+        radial-gradient(ellipse 180px 70px at 85% 20%, #fff 0%, transparent 70%),
+        linear-gradient(to bottom, #5b9ed8 0%, #a8d0f5 100%);
+}
+
+body[data-wallpaper="mystify"] .desktop {
+    background-color: #000020;
+    background-image:
+        conic-gradient(from 0deg at 30% 40%,
+            #ff00ff, #00ffff, #ff00ff, #00ffff, #ff00ff);
+    background-size: 60% 60%;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-blend-mode: screen;
+}
+
+body[data-wallpaper="plain"] .desktop {
+    background-color: #808080;
+    background-image: none;
+}
+
+/* teal is the existing default — no override needed. */
+
+.wallpaper-menu {
+    background-color: #c0c0c0;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+    padding: 2px;
+    min-width: 200px;
+}
+
+.wallpaper-menu-header {
+    padding: 4px 10px;
+    font-weight: bold;
+    background-color: #000080;
+    color: #fff;
+    font-size: 11px;
+}
+
+.wallpaper-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+.wallpaper-menu-item:hover { background-color: #000080; color: #fff; }
+
+.wallpaper-swatch {
+    width: 24px;
+    height: 16px;
+    border: 1px solid #000;
+    flex-shrink: 0;
+}
+
+.wallpaper-swatch-teal    { background-color: #008080; }
+.wallpaper-swatch-bliss   { background: linear-gradient(to bottom, #4a90e2 50%, #5fb13b 50%); }
+.wallpaper-swatch-forest  { background-color: #1a4a1a; }
+.wallpaper-swatch-clouds  { background: linear-gradient(to bottom, #5b9ed8, #a8d0f5); }
+.wallpaper-swatch-mystify { background: conic-gradient(#ff00ff, #00ffff, #ff00ff); }
+.wallpaper-swatch-plain   { background-color: #808080; }
+
+/* ============================================================================
+   Phase 4.9 — Mobile polish for game windows
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    /* Game windows take the full screen on phones — the chrome is too
+       cramped otherwise, and modal play is what users want anyway. */
+    .game-window,
+    .magic8ball-window,
+    .snake-window,
+    .spectate-window,
+    .leaderboard-window,
+    .mail-window,
+    .other-profile-window {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: calc(100vh - 28px) !important;
+    }
+
+    /* Bigger tap targets on TTT cells (44px is the iOS HIG minimum). */
+    .ttt-cell {
+        width: 88px !important;
+        height: 88px !important;
+        font-size: 52px !important;
+        touch-action: manipulation;
+    }
+    .ttt-grid { grid-template-columns: repeat(3, 88px); grid-template-rows: repeat(3, 88px); }
+
+    /* RPS buttons go full-width and stack horizontally with bigger icons. */
+    .rps-buttons { gap: 6px; }
+    .rps-button {
+        width: 30vw !important;
+        max-width: 110px;
+        height: 110px;
+        touch-action: manipulation;
+    }
+    .rps-icon { font-size: 44px; }
+
+    /* Connect Four cells scale down so the 7-col grid still fits. */
+    .c4-grid {
+        grid-template-columns: repeat(7, 9vw);
+        grid-auto-rows: 9vw;
+    }
+    .c4-drop, .c4-cell { touch-action: manipulation; }
+
+    /* Hangman keyboard wraps and grows tap targets. */
+    .hangman-keyboard {
+        grid-template-columns: repeat(7, 1fr);
+    }
+    .hangman-key { height: 30px; font-size: 14px; touch-action: manipulation; }
+    .hangman-gallows { font-size: 12px; }
+    .hangman-word-display { font-size: 18px; }
+
+    /* Chat toolbar buttons get a little taller for fingers. */
+    .format-btn { width: 32px; height: 28px; font-size: 14px; }
+    .smiley-picker-item { width: 36px; height: 36px; font-size: 22px; }
 }
